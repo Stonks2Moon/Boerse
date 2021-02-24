@@ -11,3 +11,5 @@
 * Bietet Auktionen 
 * Bietet internes Clearing für Broker an
 * Schafft automatische Unterbrechungsmöglichkeiten (sogenannte Volas)
+
+## To-Dos
