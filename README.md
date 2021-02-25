@@ -17,6 +17,7 @@
 * aktueller Preis eines bestimmten Wertpapiers
 * historischer Preisverlauf eines Wertpapiers zur Überwachung der Marktenwticklung
 * Status der Order (wurde die Order schon ausgeführt?)
+* Ist der Handel geöffnet? (Liegt eine Unterbrechung vor?)
 
 ### POST-Requests
 * Order einstellen
