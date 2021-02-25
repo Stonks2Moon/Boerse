@@ -28,9 +28,8 @@
 ### DELETE-Request
 * Order löschen
 
-## Benachrichtigungen über Sockets
+## Benachrichtigung über Sockets
 * Änderungen beim Referenzpreis
-* Nachricht der Orderausführung an den Broker
 
 ## Technologien
 ### Frontend
