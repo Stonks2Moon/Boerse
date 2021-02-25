@@ -34,7 +34,7 @@
 
 ## Technologien
 ### Frontend
-TBD
+Vue.js
 
 ### Backend
 * Nest.js
