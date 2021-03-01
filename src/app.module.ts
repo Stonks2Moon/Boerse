@@ -5,7 +5,6 @@ import { BrokerModule } from './broker/broker.module';
 import { ClearingModule } from './clearing/clearing.module';
 import { OrderModule } from './order/order.module';
 import { ShareModule } from './share/share.module';
-import { MarketModule } from './market/market.module';
 
 @Module({
   imports: [
@@ -26,7 +25,7 @@ import { MarketModule } from './market/market.module';
     BrokerModule,
     ShareModule,
     ClearingModule,
-    MarketModule,
+    // MarketModule,
   ],
 })
 export class AppModule {}

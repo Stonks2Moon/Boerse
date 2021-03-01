@@ -39,4 +39,11 @@ export class BrokerController {
   async removeBroker(@Param('id') id: string): Promise<boolean> {
     return this.brokerService.removeBroker(id);
   }
+
+  @BrokerTypes(['stockmarket'])
+  @UseGuards(AuthGuard('jwt'), BrokerTypeGuard)
+  @Post('verify/stockmarket')
+  async verfiyStockmarket(): Promise<boolean> {
+    return true;
+  }
 }

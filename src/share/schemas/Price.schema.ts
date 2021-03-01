@@ -2,7 +2,16 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ApiProperty } from '@nestjs/swagger';
 import { Document } from 'mongoose';
 
-@Schema({ toJSON: { virtuals: true } })
+@Schema({
+  toJSON: {
+    transform: (_doc: Price, ret: Price) => {
+      delete ret._id;
+      delete ret.shareId;
+      delete ret.__v;
+      return ret;
+    },
+  },
+})
 export class Price extends Document {
   @ApiProperty({
     description: "The share's id this price belongs to",

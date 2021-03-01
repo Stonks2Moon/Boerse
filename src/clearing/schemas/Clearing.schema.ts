@@ -8,7 +8,7 @@ export class Clearing extends Document {
     description: 'TODO:',
   })
   @Prop()
-  clearingId: string;
+  brokerId: string;
 
   @ApiProperty({
     description: 'TODO:',

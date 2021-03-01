@@ -50,7 +50,6 @@ export class OrderValidator {
         'Limit needs to be of type number',
       );
     }
-    if (!limit) order.limit = -1;
 
     if (stop && typeof stop !== 'number') {
       throw new UnprocessableEntityException('Stop needs to be of type number');

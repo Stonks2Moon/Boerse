@@ -41,8 +41,10 @@ export class ShareService {
     if (until && typeof 'until' === 'number') {
       filter.push({ timestamp: { $lte: from } });
     }
-
-    return this.priceModel.find({ shareId: id, $and: filter });
+    if (filter.length !== 0) {
+      return this.priceModel.find({ shareId: id, $and: filter });
+    }
+    return this.priceModel.find({ shareId: id });
   }
 
   public async updatePrice(shareId: string, price: number): Promise<void> {

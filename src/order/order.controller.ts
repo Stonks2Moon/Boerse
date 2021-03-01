@@ -38,6 +38,11 @@ export class OrderController {
     return this.orderService.deleteOrder(broker, id);
   }
 
+  @Get('orderbook')
+  printOrderBook(): void {
+    this.orderService.printOrderBook('6037e67c8407c737441517d6');
+  }
+
   @UseGuards(AuthGuard('jwt'))
   @Get(':id')
   async getOrder(
@@ -45,5 +50,41 @@ export class OrderController {
     @Param('id') id: string,
   ): Promise<Order> {
     return this.orderService.getOrder(broker, id);
+  }
+
+  @Get('test/:type/:amount')
+  async testOrder(
+    @Param('type') type: 'buy' | 'sell',
+    @Param('amount') amount: number,
+  ): Promise<Order> {
+    return this.orderService.placeOrder(
+      { displayName: 'Tester #1', id: 'Test', type: 'private' },
+      {
+        amount: +amount,
+        type: type,
+        shareId: '6037e67c8407c737441517d6',
+        onComplete: 'dkwoadjwaidjaw',
+        onMatch: 'dwioajdiawjdi',
+      },
+    );
+  }
+
+  @Get('test/:type/:amount/:limit')
+  async testOrderLimit(
+    @Param('type') type: 'buy' | 'sell',
+    @Param('amount') amount: number,
+    @Param('limit') limit: number,
+  ): Promise<Order> {
+    return this.orderService.placeOrder(
+      { displayName: 'Tester #1', id: 'Test', type: 'private' },
+      {
+        amount: +amount,
+        limit: +limit,
+        type: type,
+        shareId: '6037e67c8407c737441517d6',
+        onComplete: 'dkwoadjwaidjaw',
+        onMatch: 'dwioajdiawjdi',
+      },
+    );
   }
 }

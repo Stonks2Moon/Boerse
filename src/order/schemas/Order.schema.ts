@@ -2,7 +2,19 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ApiProperty } from '@nestjs/swagger';
 import { Document } from 'mongoose';
 
-@Schema({ toJSON: { virtuals: true } })
+@Schema({
+  toJSON: {
+    virtuals: true,
+    transform: (_doc: Order, ret: Order) => {
+      delete ret._id;
+      delete ret.__v;
+      delete ret.onMatch;
+      delete ret.onComplete;
+      delete ret.brokerId;
+      return ret;
+    },
+  },
+})
 export class Order extends Document {
   @ApiProperty({
     description: 'TODO:',
@@ -47,10 +59,11 @@ export class Order extends Document {
   type: 'buy' | 'sell';
 
   @ApiProperty({
+    required: false,
     description: 'TODO:',
   })
-  @Prop()
-  limit: number;
+  @Prop({ required: false })
+  limit?: number;
 
   @ApiProperty({ required: false })
   @Prop({ required: false })
