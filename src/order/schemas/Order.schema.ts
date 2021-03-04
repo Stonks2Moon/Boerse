@@ -56,6 +56,15 @@ export class Order extends Document {
     description: 'TODO:',
   })
   @Prop()
+  onDelete: string;
+
+  @Prop({ required: false })
+  deleteRequested?: boolean;
+
+  @ApiProperty({
+    description: 'TODO:',
+  })
+  @Prop()
   type: 'buy' | 'sell';
 
   @ApiProperty({

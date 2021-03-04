@@ -49,8 +49,15 @@ export class ShareService {
 
   public async updatePrice(shareId: string, price: number): Promise<void> {
     const share = await this.getShare(shareId);
+
     if (share) {
-      await share.updateOne({ $set: { price: price } });
+      // TODO: Remove or keep?
+      if (share.price === price) return;
+
+      await this.shareModel.updateOne(
+        { _id: shareId },
+        { $set: { price: price } },
+      );
       await this.priceModel.create({
         shareId: shareId,
         price: price,

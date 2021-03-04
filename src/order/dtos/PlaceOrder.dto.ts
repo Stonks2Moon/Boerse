@@ -26,6 +26,12 @@ export class PlaceOrderDto {
 
   @ApiProperty({
     description: 'TODO:',
+    example: "ASA there's one",
+  })
+  onDelete: string;
+
+  @ApiProperty({
+    description: 'TODO:',
     example: 'sell',
     type: 'OrderType',
   })

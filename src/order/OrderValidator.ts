@@ -14,7 +14,16 @@ import { PlaceOrderDto } from './dtos/PlaceOrder.dto';
 //   stopLimit?: number;
 export class OrderValidator {
   public static validate(order: PlaceOrderDto): PlaceOrderDto {
-    const { amount, limit, onComplete, type, onMatch, stop, stopLimit } = order;
+    const {
+      amount,
+      limit,
+      onComplete,
+      onDelete,
+      type,
+      onMatch,
+      stop,
+      stopLimit,
+    } = order;
 
     if (!amount || typeof amount !== 'number') {
       throw new UnprocessableEntityException(
@@ -36,6 +45,12 @@ export class OrderValidator {
     if (!onComplete || onComplete.length === 0) {
       throw new UnprocessableEntityException(
         'Please provide a callback for when an order is completed',
+      );
+    }
+
+    if (!onDelete || onDelete.length === 0) {
+      throw new UnprocessableEntityException(
+        'Please provide a callback for when an order is deleted',
       );
     }
 
@@ -77,6 +92,7 @@ export class OrderValidator {
       amount: order.amount,
       onMatch: order.onMatch,
       onComplete: order.onComplete,
+      onDelete: order.onDelete,
       type: order.type,
       limit: order.limit,
       stop: order.stop,

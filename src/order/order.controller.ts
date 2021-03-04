@@ -65,6 +65,7 @@ export class OrderController {
         shareId: '6037e67c8407c737441517d6',
         onComplete: 'dkwoadjwaidjaw',
         onMatch: 'dwioajdiawjdi',
+        onDelete: 'daw',
       },
     );
   }
@@ -84,6 +85,7 @@ export class OrderController {
         shareId: '6037e67c8407c737441517d6',
         onComplete: 'dkwoadjwaidjaw',
         onMatch: 'dwioajdiawjdi',
+        onDelete: 'dwadawd',
       },
     );
   }
