@@ -16,6 +16,12 @@ export class PlaceOrderDto {
     description: 'TODO:',
     example: "ASA there's one",
   })
+  onPlace: string;
+
+  @ApiProperty({
+    description: 'TODO:',
+    example: "ASA there's one",
+  })
   onMatch: string;
 
   @ApiProperty({

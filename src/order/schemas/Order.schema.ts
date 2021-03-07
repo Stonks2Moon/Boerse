@@ -8,8 +8,10 @@ import { Document } from 'mongoose';
     transform: (_doc: Order, ret: Order) => {
       delete ret._id;
       delete ret.__v;
+      delete ret.onPlace;
       delete ret.onMatch;
       delete ret.onComplete;
+      delete ret.onDelete;
       delete ret.brokerId;
       return ret;
     },
@@ -44,6 +46,12 @@ export class Order extends Document {
     description: 'TODO:',
   })
   @Prop()
+  onPlace: string;
+
+  @ApiProperty({
+    description: 'TODO:',
+  })
+  @Prop()
   onMatch: string;
 
   @ApiProperty({
@@ -57,9 +65,6 @@ export class Order extends Document {
   })
   @Prop()
   onDelete: string;
-
-  @Prop({ required: false })
-  deleteRequested?: boolean;
 
   @ApiProperty({
     description: 'TODO:',

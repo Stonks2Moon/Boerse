@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Order } from '../schemas/Order.schema';
 
-export class OrderMatchDto {
+export class OrderMatchedDto {
   @ApiProperty({
     description: 'TODO:',
   })
@@ -15,4 +16,10 @@ export class OrderMatchDto {
     description: 'TODO:',
   })
   amount: number;
+
+  constructor(order: Order, amount: number) {
+    this.orderId = order._id;
+    this.timestamp = new Date().getTime();
+    this.amount = amount;
+  }
 }

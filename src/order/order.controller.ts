@@ -11,82 +11,51 @@ import { AuthGuard } from '@nestjs/passport';
 import { ApiTags } from '@nestjs/swagger';
 import { MSBroker } from 'src/broker/broker.decorator';
 import { BrokerModel } from 'src/broker/models/Broker.model';
+import { DeleteOrderDto } from './dtos/DeleteOrder.dto';
 import { PlaceOrderDto } from './dtos/PlaceOrder.dto';
+import { QueuedJob } from './dtos/QueueItem.dto';
+import { UnqueueJobDto } from './dtos/UnqueueJob.dto';
 import { OrderService } from './order.service';
+import { QueueService } from './queue.service';
 import { Order } from './schemas/Order.schema';
 
 @ApiTags('Order')
 @Controller('order')
 export class OrderController {
-  constructor(private readonly orderService: OrderService) {}
+  constructor(
+    private readonly orderService: OrderService,
+    private readonly queueService: QueueService,
+  ) {}
 
   @UseGuards(AuthGuard('jwt'))
-  @Post('')
+  @Post()
   async placeOrder(
     @MSBroker() broker: BrokerModel,
-    @Body() order: PlaceOrderDto,
-  ): Promise<Order> {
-    return this.orderService.placeOrder(broker, order);
+    @Body() dto: PlaceOrderDto,
+  ): Promise<QueuedJob> {
+    return this.queueService.placeRequest(dto, broker);
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @Delete(':id')
+  @Delete()
   async delteOrder(
     @MSBroker() broker: BrokerModel,
-    @Param('id') id: string,
-  ): Promise<boolean> {
-    return this.orderService.deleteOrder(broker, id);
-  }
-
-  @Get('orderbook')
-  printOrderBook(): void {
-    this.orderService.printOrderBook('6037e67c8407c737441517d6');
+    @Body() dto: DeleteOrderDto | UnqueueJobDto,
+  ): Promise<QueuedJob | boolean> {
+    return this.queueService.deleteRequest(dto, broker);
   }
 
   @UseGuards(AuthGuard('jwt'))
   @Get(':id')
-  async getOrder(
+  async getOrderStatus(
     @MSBroker() broker: BrokerModel,
     @Param('id') id: string,
   ): Promise<Order> {
     return this.orderService.getOrder(broker, id);
   }
 
-  @Get('test/:type/:amount')
-  async testOrder(
-    @Param('type') type: 'buy' | 'sell',
-    @Param('amount') amount: number,
-  ): Promise<Order> {
-    return this.orderService.placeOrder(
-      { displayName: 'Tester #1', id: 'Test', type: 'private' },
-      {
-        amount: +amount,
-        type: type,
-        shareId: '6037e67c8407c737441517d6',
-        onComplete: 'dkwoadjwaidjaw',
-        onMatch: 'dwioajdiawjdi',
-        onDelete: 'daw',
-      },
-    );
-  }
-
-  @Get('test/:type/:amount/:limit')
-  async testOrderLimit(
-    @Param('type') type: 'buy' | 'sell',
-    @Param('amount') amount: number,
-    @Param('limit') limit: number,
-  ): Promise<Order> {
-    return this.orderService.placeOrder(
-      { displayName: 'Tester #1', id: 'Test', type: 'private' },
-      {
-        amount: +amount,
-        limit: +limit,
-        type: type,
-        shareId: '6037e67c8407c737441517d6',
-        onComplete: 'dkwoadjwaidjaw',
-        onMatch: 'dwioajdiawjdi',
-        onDelete: 'dwadawd',
-      },
-    );
+  @Get('orderbook')
+  printOrderBook(): void {
+    this.orderService.printOrderBook('6037e67c8407c737441517d6');
   }
 }

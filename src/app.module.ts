@@ -1,3 +1,4 @@
+import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -18,6 +19,19 @@ import { ShareModule } from './share/share.module';
           )}:${configService.get('MONGO_PW')}@${configService.get(
             'MONGO_DB',
           )}/${configService.get('MONGO_TABLE')}?retryWrites=true&w=majority`,
+        };
+      },
+    }),
+    BullModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        return {
+          redis: {
+            host: configService.get('REDIS_HOST'),
+            port: configService.get('REDIS_PORT'),
+            username: configService.get('REDIS_USER'),
+            password: configService.get('REDIS_PW'),
+          },
         };
       },
     }),

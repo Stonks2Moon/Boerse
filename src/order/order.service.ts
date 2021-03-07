@@ -1,68 +1,65 @@
-import {
-  Injectable,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { HttpService, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { isValidObjectId, Model } from 'mongoose';
 import { BrokerModel } from 'src/broker/models/Broker.model';
 import { Clearing } from 'src/clearing/schemas/Clearing.schema';
 import { ShareService } from 'src/share/share.service';
+import { DeleteOrderDto } from './dtos/DeleteOrder.dto';
+import { OrderCompletedDto } from './dtos/OrderCompleted.dto';
+import { OrderDeletedDto } from './dtos/OrderDeleted.dto';
+import { OrderMatchedDto } from './dtos/OrderMatched.dto';
 import { PlaceOrderDto } from './dtos/PlaceOrder.dto';
-import { OrderValidator } from './OrderValidator';
 import { Order } from './schemas/Order.schema';
 
 @Injectable()
 export class OrderService {
   constructor(
     private readonly shareService: ShareService,
+    private readonly httpService: HttpService,
     @InjectModel(Order.name) private orderModel: Model<Order>,
     @InjectModel(Clearing.name) private clearingModel: Model<Clearing>,
   ) {}
 
   public async getOrder(broker: BrokerModel, id: string): Promise<Order> {
-    if (!id || !isValidObjectId(id)) throw new NotFoundException();
+    if (!id || !isValidObjectId(id)) {
+      throw new NotFoundException(`Invalid orderId: '${id}'`);
+    }
 
     const order = await this.orderModel.findOne({
       _id: id,
       brokerId: broker.id,
     });
-    if (!order) throw new NotFoundException();
+    if (!order) {
+      throw new NotFoundException(`Order with id '${id}' doesn't exist`);
+    }
 
     return order;
   }
 
-  public async deleteOrder(broker: BrokerModel, id: string): Promise<boolean> {
-    await this.orderModel.updateOne(
-      { _id: id, brokerId: broker.id },
-      { $set: { deleteRequested: true } },
-    );
-    return true;
+  public async deleteOrder(
+    broker: BrokerModel,
+    dto: DeleteOrderDto,
+  ): Promise<void> {
+    const order = await this.getOrder(broker, dto.orderId);
+    if (order) {
+      const orderDeleted = new OrderDeletedDto(order);
+      await order.delete();
+      this.httpService.post(order.onDelete, orderDeleted);
+    }
   }
 
   public async placeOrder(
     broker: BrokerModel,
-    order: PlaceOrderDto,
-  ): Promise<Order> {
-    order = OrderValidator.validate(order);
-
-    if (!(await this.shareService.getShare(order.shareId))) {
-      throw new UnprocessableEntityException(
-        "Given share with id 'shareId' doesn't exist",
-      );
-    }
-
-    const placedOrder = await this.orderModel.create({
-      ...order,
+    dto: PlaceOrderDto,
+  ): Promise<void> {
+    const order = await this.orderModel.create({
+      ...dto,
       brokerId: broker.id,
       timestamp: new Date().getTime(),
     });
 
-    await this.printOrderBook(order.shareId);
-    await this.orderPlaced(placedOrder);
-    await this.printOrderBook(order.shareId);
-
-    return placedOrder;
+    this.httpService.post(order.onPlace, order);
+    this.orderPlaced(order);
   }
 
   private async orderPlaced(order: Order): Promise<void> {
@@ -71,6 +68,12 @@ export class OrderService {
     } else {
       await this.sellOrderPlaced(order);
     }
+
+    const readyForDelete = await this.orderModel.find({ amount: { $lte: 0 } });
+    readyForDelete.forEach(async (d) => {
+      this.httpService.post(d.onComplete, new OrderCompletedDto(d));
+      await d.delete();
+    });
     await this.orderModel.deleteMany({ amount: { $lte: 0 } });
   }
 
@@ -132,24 +135,54 @@ export class OrderService {
     }
   }
 
+  /**
+   *
+   * @param price price
+   * @param remaining remaining
+   * @param shareId shareId
+   * @param iOrder input order
+   * @param mOrder matching order
+   * @returns reamining number
+   */
   private async match(
     price: number,
     remaining: number,
     shareId: string,
-    inputOrder: Order,
-    matchingOrder: Order,
+    iOrder: Order,
+    mOrder: Order,
   ): Promise<number> {
     await this.shareService.updatePrice(shareId, price);
 
-    if (matchingOrder.amount >= remaining) {
-      await this.updateOrderAmount(inputOrder, remaining, price);
-      await this.updateOrderAmount(matchingOrder, remaining, price);
+    if (mOrder.amount >= remaining) {
+      await this.updateOrderAmount(iOrder, remaining, price);
+      await this.updateOrderAmount(mOrder, remaining, price);
+
+      this.httpService.post(
+        iOrder.onMatch,
+        new OrderMatchedDto(iOrder, remaining),
+      );
+      this.httpService.post(
+        mOrder.onMatch,
+        new OrderMatchedDto(mOrder, remaining),
+      );
+
       remaining = 0;
     } else {
-      await this.updateOrderAmount(inputOrder, matchingOrder.amount, price);
-      await this.updateOrderAmount(matchingOrder, matchingOrder.amount, price);
-      remaining -= matchingOrder.amount;
+      await this.updateOrderAmount(iOrder, mOrder.amount, price);
+      await this.updateOrderAmount(mOrder, mOrder.amount, price);
+
+      this.httpService.post(
+        iOrder.onMatch,
+        new OrderMatchedDto(iOrder, mOrder.amount),
+      );
+      this.httpService.post(
+        mOrder.onMatch,
+        new OrderMatchedDto(mOrder, mOrder.amount),
+      );
+
+      remaining -= mOrder.amount;
     }
+
     return remaining;
   }
 

@@ -17,6 +17,7 @@ export class OrderValidator {
     const {
       amount,
       limit,
+      onPlace,
       onComplete,
       onDelete,
       type,
@@ -33,6 +34,12 @@ export class OrderValidator {
     if (amount < 0) {
       throw new UnprocessableEntityException(
         'Amount must be greater than zero',
+      );
+    }
+
+    if (!onPlace || onPlace.length === 0) {
+      throw new UnprocessableEntityException(
+        'Please provide a callback for when an order is placed',
       );
     }
 
@@ -90,6 +97,7 @@ export class OrderValidator {
     return {
       shareId: order.shareId,
       amount: order.amount,
+      onPlace: order.onPlace,
       onMatch: order.onMatch,
       onComplete: order.onComplete,
       onDelete: order.onDelete,
