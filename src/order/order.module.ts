@@ -2,6 +2,7 @@ import { BullModule } from '@nestjs/bull';
 import { HttpModule, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Clearing, ClearingSchema } from 'src/clearing/schemas/Clearing.schema';
+import { MSSocket } from 'src/MSSocket';
 import { ShareModule } from 'src/share/share.module';
 import { OrderController } from './order.controller';
 import { OrderService } from './order.service';
@@ -19,7 +20,7 @@ import { Order, OrderSchema } from './schemas/Order.schema';
     ShareModule,
     HttpModule,
   ],
-  providers: [OrderService, QueueService, QueueProcessor],
+  providers: [OrderService, QueueService, QueueProcessor, MSSocket],
   controllers: [OrderController],
 })
 export class OrderModule {}

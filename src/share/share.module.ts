@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { MSSocket } from 'src/MSSocket';
 import { Price, PriceSchema } from './schemas/Price.schema';
 import { Share, ShareSchema } from './schemas/Share.schema';
 import { ShareController } from './share.controller';
@@ -12,7 +13,7 @@ import { ShareService } from './share.service';
       { name: Price.name, schema: PriceSchema },
     ]),
   ],
-  providers: [ShareService],
+  providers: [ShareService, MSSocket],
   controllers: [ShareController],
   exports: [ShareService],
 })

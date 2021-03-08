@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { isValidObjectId, Model } from 'mongoose';
 import { BrokerModel } from 'src/broker/models/Broker.model';
 import { Clearing } from 'src/clearing/schemas/Clearing.schema';
+import { MSSocket } from 'src/MSSocket';
 import { ShareService } from 'src/share/share.service';
 import { DeleteOrderDto } from './dtos/DeleteOrder.dto';
 import { OrderCompletedDto } from './dtos/OrderCompleted.dto';
@@ -14,11 +15,16 @@ import { Order } from './schemas/Order.schema';
 @Injectable()
 export class OrderService {
   constructor(
-    private readonly shareService: ShareService,
-    private readonly httpService: HttpService,
     @InjectModel(Order.name) private orderModel: Model<Order>,
     @InjectModel(Clearing.name) private clearingModel: Model<Clearing>,
+    private readonly shareService: ShareService,
+    private readonly httpService: HttpService,
+    private readonly msSocket: MSSocket,
   ) {}
+
+  public async getOrders(): Promise<Order[]> {
+    return this.orderModel.find();
+  }
 
   public async getOrder(broker: BrokerModel, id: string): Promise<Order> {
     if (!id || !isValidObjectId(id)) {
@@ -44,6 +50,7 @@ export class OrderService {
     if (order) {
       const orderDeleted = new OrderDeletedDto(order);
       await order.delete();
+      this.msSocket.server.emit('update-orderbook');
       this.httpService.post(order.onDelete, orderDeleted);
     }
   }
@@ -59,7 +66,7 @@ export class OrderService {
     });
 
     this.httpService.post(order.onPlace, order);
-    this.orderPlaced(order);
+    await this.orderPlaced(order);
   }
 
   private async orderPlaced(order: Order): Promise<void> {
@@ -75,6 +82,8 @@ export class OrderService {
       await d.delete();
     });
     await this.orderModel.deleteMany({ amount: { $lte: 0 } });
+
+    this.msSocket.server.emit('update-orderbook');
   }
 
   private async buyOrderPlaced(buyOrder: Order): Promise<void> {
@@ -245,38 +254,5 @@ export class OrderService {
         type: 'sell',
       })
       .sort({ limit: -1, timestamp: -1 });
-  }
-
-  public async printOrderBook(shareId: string): Promise<void> {
-    const buyOrders = await this.getBuyOrders(shareId);
-    const sellOrders = await this.getSellOrders(shareId);
-
-    const prettyTS = (timestamp: number): string => {
-      if (timestamp === 0) return '-\t';
-      return new Date(timestamp).toLocaleTimeString();
-    };
-
-    const price = await this.shareService.getCurrentPrice(shareId);
-
-    console.log('');
-    console.log(`Kauf \t      \t     \t${price}  \t     \t       \tVerkauf`);
-    console.log('Zeit\t\tVolumen\tLimit\t  \tLimit\tVolumne\tZeit');
-
-    sellOrders.forEach((s) => {
-      console.log(
-        `\t\t\t\t\t${s.limit || 'Market'}\t${s.amount}\t${prettyTS(
-          s.timestamp,
-        )}`,
-      );
-    });
-
-    buyOrders.forEach((b) => {
-      console.log(
-        `${prettyTS(b.timestamp)}\t${b.amount}\t${b.limit || 'Market'}`,
-      );
-    });
-
-    console.log('');
-    console.log('');
   }
 }

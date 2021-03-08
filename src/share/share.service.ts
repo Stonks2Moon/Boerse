@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { isValidObjectId, Model } from 'mongoose';
+import { MSSocket } from 'src/MSSocket';
 import { Price } from './schemas/Price.schema';
 import { Share } from './schemas/Share.schema';
 
@@ -9,6 +10,7 @@ export class ShareService {
   constructor(
     @InjectModel(Share.name) private shareModel: Model<Share>,
     @InjectModel(Price.name) private priceModel: Model<Price>,
+    private readonly msSocket: MSSocket,
   ) {}
 
   public async getShare(id: string): Promise<Share | null> {
@@ -58,10 +60,16 @@ export class ShareService {
         { _id: shareId },
         { $set: { price: price } },
       );
-      await this.priceModel.create({
+
+      const model = await this.priceModel.create({
         shareId: shareId,
         price: price,
         timestamp: new Date().getTime(),
+      });
+
+      this.msSocket.server.emit('price', {
+        shareId: shareId,
+        ...model.toJSON(),
       });
     }
   }

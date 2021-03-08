@@ -28,7 +28,9 @@
     "@nestjs/mongoose": "^7.2.4",
     "@nestjs/passport": "^7.1.5",
     "@nestjs/platform-express": "^7.6.13",
+    "@nestjs/platform-socket.io": "^7.4.3",
     "@nestjs/swagger": "^4.7.15",
+    "@nestjs/websockets": "^7.4.3",
     "bull": "^3.20.1",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.11.18",
@@ -37,6 +39,7 @@
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.0",
     "rxjs": "^6.6.6",
+    "socket.io": "^2.3.0",
     "swagger-ui-express": "^4.1.6"
   },
   "devDependencies": {
@@ -49,6 +52,7 @@
     "@types/node": "^14.14.31",
     "@types/passport": "^1.0.6",
     "@types/passport-jwt": "^3.0.5",
+    "@types/socket.io": "^2.1.11",
     "@types/supertest": "^2.0.8",
     "@typescript-eslint/eslint-plugin": "^4.16.1",
     "@typescript-eslint/parser": "^4.16.1",

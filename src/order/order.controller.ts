@@ -10,6 +10,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags } from '@nestjs/swagger';
 import { MSBroker } from 'src/broker/broker.decorator';
+import { BrokerTypeGuard, BrokerTypes } from 'src/broker/brokerType.guard';
 import { BrokerModel } from 'src/broker/models/Broker.model';
 import { DeleteOrderDto } from './dtos/DeleteOrder.dto';
 import { PlaceOrderDto } from './dtos/PlaceOrder.dto';
@@ -45,6 +46,13 @@ export class OrderController {
     return this.queueService.deleteRequest(dto, broker);
   }
 
+  @BrokerTypes(['stockmarket'])
+  @UseGuards(AuthGuard('jwt'), BrokerTypeGuard)
+  @Get('orders')
+  async getOrders(): Promise<Order[]> {
+    return this.orderService.getOrders();
+  }
+
   @UseGuards(AuthGuard('jwt'))
   @Get(':id')
   async getOrderStatus(
@@ -52,10 +60,5 @@ export class OrderController {
     @Param('id') id: string,
   ): Promise<Order> {
     return this.orderService.getOrder(broker, id);
-  }
-
-  @Get('orderbook')
-  printOrderBook(): void {
-    this.orderService.printOrderBook('6037e67c8407c737441517d6');
   }
 }
