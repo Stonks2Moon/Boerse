@@ -24,6 +24,18 @@ export class Share extends Document {
   })
   @Prop()
   price: number;
+
+  @ApiProperty({
+    description: 'Display color for texts or anything else',
+  })
+  @Prop()
+  color: string;
+
+  @ApiProperty({
+    description: 'Thumbnail of the assets (e.g. coin)',
+  })
+  @Prop()
+  thumbnail: string;
 }
 
 export const ShareSchema = SchemaFactory.createForClass(Share);

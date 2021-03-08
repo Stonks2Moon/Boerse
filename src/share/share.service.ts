@@ -1,9 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { isValidObjectId, Model } from 'mongoose';
 import { MSSocket } from 'src/MSSocket';
+import { CreateShareDto } from './dtos/CreateShare.dto';
 import { Price } from './schemas/Price.schema';
 import { Share } from './schemas/Share.schema';
+import { ShareValidator } from './ShareValidator';
 
 @Injectable()
 export class ShareService {
@@ -44,9 +46,9 @@ export class ShareService {
       filter.push({ timestamp: { $lte: from } });
     }
     if (filter.length !== 0) {
-      return this.priceModel.find({ shareId: id, $and: filter });
+      return this.priceModel.find({ shareId: id, $and: filter }) || [];
     }
-    return this.priceModel.find({ shareId: id });
+    return this.priceModel.find({ shareId: id }) || [];
   }
 
   public async updatePrice(shareId: string, price: number): Promise<void> {
@@ -72,5 +74,20 @@ export class ShareService {
         ...model.toJSON(),
       });
     }
+  }
+
+  public async patchShare(id: string, dto: CreateShareDto): Promise<Share> {
+    dto = ShareValidator.validate(dto);
+    if (!id || id.length === 0 || !isValidObjectId(id)) {
+      throw new UnprocessableEntityException('Invalid shareId');
+    }
+
+    await this.shareModel.updateOne({ _id: id }, { $set: dto });
+    return this.getShare(id);
+  }
+
+  public async createShare(dto: CreateShareDto): Promise<Share> {
+    dto = ShareValidator.validate(dto);
+    return this.shareModel.create(dto);
   }
 }

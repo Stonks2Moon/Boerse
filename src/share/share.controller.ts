@@ -1,5 +1,17 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { BrokerTypeGuard, BrokerTypes } from 'src/broker/brokerType.guard';
+import { CreateShareDto } from './dtos/CreateShare.dto';
 import { Price } from './schemas/Price.schema';
 import { Share } from './schemas/Share.schema';
 import { ShareService } from './share.service';
@@ -38,5 +50,28 @@ export class ShareController {
     @Query('until') until?: number,
   ): Promise<Price[] | null> {
     return this.shareService.getPrices(id, from, until);
+  }
+
+  @ApiResponse({
+    description: 'Returns the newly created share.',
+  })
+  @BrokerTypes(['stockmarket'])
+  @UseGuards(AuthGuard('jwt'), BrokerTypeGuard)
+  @Post('')
+  async createShare(@Body() dto: CreateShareDto): Promise<Share> {
+    return this.shareService.createShare(dto);
+  }
+
+  @ApiResponse({
+    description: 'Returns the patched share.',
+  })
+  @BrokerTypes(['stockmarket'])
+  @UseGuards(AuthGuard('jwt'), BrokerTypeGuard)
+  @Patch(':id')
+  async patchShare(
+    @Param('id') id: string,
+    @Body() dto: CreateShareDto,
+  ): Promise<Share> {
+    return this.shareService.patchShare(id, dto);
   }
 }
