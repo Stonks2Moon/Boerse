@@ -41,3 +41,4 @@ Vue.js
 * MongoDB
 * Swagger-UI zur Darstellung der REST Schnittstellen
 * Socket.io
+* REDIS
