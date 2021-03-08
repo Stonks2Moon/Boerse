@@ -39,7 +39,7 @@ export class OrderController {
 
   @UseGuards(AuthGuard('jwt'))
   @Delete()
-  async delteOrder(
+  async deleteOrder(
     @MSBroker() broker: BrokerModel,
     @Body() dto: DeleteOrderDto | UnqueueJobDto,
   ): Promise<QueuedJob | boolean> {
