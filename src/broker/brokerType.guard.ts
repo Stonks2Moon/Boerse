@@ -30,6 +30,6 @@ export class BrokerTypeGuard implements CanActivate {
     const req = context.switchToHttp().getRequest();
     const user = req.user as BrokerModel;
 
-    return types.some(t => t.toLowerCase() === user.type);
+    return types.some((t) => t.toLowerCase() === user.type);
   }
 }

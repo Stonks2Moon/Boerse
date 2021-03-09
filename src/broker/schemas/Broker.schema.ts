@@ -30,6 +30,9 @@ export class Broker extends Document {
   })
   @Prop()
   displayName: string;
+
+  @Prop({ required: false })
+  banned?: boolean;
 }
 
 export const BrokerSchema = SchemaFactory.createForClass(Broker);

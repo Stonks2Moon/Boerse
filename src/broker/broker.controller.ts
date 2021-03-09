@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -21,16 +22,16 @@ export class BrokerController {
 
   @BrokerTypes(['stockmarket'])
   @UseGuards(AuthGuard('jwt'), BrokerTypeGuard)
-  @Get('')
+  @Get()
   async getBroker(): Promise<Broker[]> {
     return this.brokerService.getBroker();
   }
 
   @BrokerTypes(['stockmarket'])
   @UseGuards(AuthGuard('jwt'), BrokerTypeGuard)
-  @Post('')
-  async createBroker(@Body() createBroker: CreateBrokerDto): Promise<Broker> {
-    return this.brokerService.createBroker(createBroker);
+  @Post()
+  async createBroker(@Body() dto: CreateBrokerDto): Promise<Broker> {
+    return this.brokerService.createBroker(dto);
   }
 
   @BrokerTypes(['stockmarket'])
@@ -38,6 +39,25 @@ export class BrokerController {
   @Delete(':id')
   async removeBroker(@Param('id') id: string): Promise<boolean> {
     return this.brokerService.removeBroker(id);
+  }
+  @BrokerTypes(['stockmarket'])
+  @UseGuards(AuthGuard('jwt'), BrokerTypeGuard)
+  @Patch(':id/banned/:banned')
+  async toggleBanned(
+    @Param('id') id: string,
+    @Param('banned') b: number,
+  ): Promise<Broker> {
+    return this.brokerService.toggleBanned(id, b && +b === 1);
+  }
+
+  @BrokerTypes(['stockmarket'])
+  @UseGuards(AuthGuard('jwt'), BrokerTypeGuard)
+  @Patch(':id')
+  async updateBroker(
+    @Param('id') id: string,
+    @Body() dto: CreateBrokerDto,
+  ): Promise<Broker> {
+    return this.brokerService.patchBroker(id, dto);
   }
 
   @BrokerTypes(['stockmarket'])
