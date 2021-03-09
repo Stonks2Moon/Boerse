@@ -33,11 +33,11 @@ export class OrderService {
       throw new NotFoundException(`Invalid orderId: '${id}'`);
     }
 
-   /**
-    * check for order with given id and brokerId 
-    * @param _id: id of given order
-    * @param brokerId: id of broker who placed the order
-    */
+    /**
+     * check for order with given id and brokerId
+     * @param _id: id of given order
+     * @param brokerId: id of broker who placed the order
+     */
     const order = await this.orderModel.findOne({
       _id: id,
       brokerId: broker.id,
@@ -49,12 +49,12 @@ export class OrderService {
     return order;
   }
 
-  /** 
+  /**
    * delete specific order
    * @param broker: information about broker who placed order
    * @param dto: information about order to be deleted
    * get order information, call method order.delete()
-   * update orderbook + post request to delete order 
+   * update orderbook + post request to delete order
    */
   public async deleteOrder(
     broker: BrokerModel,
@@ -69,13 +69,13 @@ export class OrderService {
     }
   }
 
-  /** 
+  /**
    * place new order
    * @param broker: information about broker who placed order
    * @param dto: information about order to be placed
-   * create new order with timestamp 
+   * create new order with timestamp
    * post request + call method orderPlaced
-   */  
+   */
   public async placeOrder(
     broker: BrokerModel,
     dto: PlaceOrderDto,
@@ -90,10 +90,10 @@ export class OrderService {
     await this.orderPlaced(order);
   }
 
-  /** 
-   * place order in orderbook 
+  /**
+   * place order in orderbook
    * differentiate between buy order and sell order
-  */
+   */
   private async orderPlaced(order: Order): Promise<void> {
     if (order.type === 'buy') {
       await this.buyOrderPlaced(order);
@@ -103,7 +103,7 @@ export class OrderService {
 
     /**
      * delete all orders in orderbook?
-     * 
+     *
      */
     const readyForDelete = await this.orderModel.find({ amount: { $lte: 0 } });
     readyForDelete.forEach(async (d) => {
@@ -121,7 +121,7 @@ export class OrderService {
    * - if no sell orders, place buy order in orderbook
    * - check if there are sell orders to match with, iterate through sell orders
    *   if market order look for cheapest sell order
-   *   if limit order get prices and check if there is a fitting sell order 
+   *   if limit order get prices and check if there is a fitting sell order
    *      if sell orders are higher than buy order limit - place buy order
    *   else call this.match
    */
@@ -154,14 +154,13 @@ export class OrderService {
     }
   }
 
-  
   /**
    * place or match a sell order
    * check for buy orders to match with:
    * - if no buy orders, place buy order in orderbook
    * - check if there are buy orders to match with, iterate through buy orders
    *   if market order look for max. buy order
-   *   if limit order get prices and check if there is a fitting buy order 
+   *   if limit order get prices and check if there is a fitting buy order
    *      if buy orders are lower than sell order limit - place sell order
    *   else call this.match
    */
@@ -280,7 +279,7 @@ export class OrderService {
    * @param order: matched order
    * @param amount: how many orders were matched
    * @param price: sold for what pricee
-   * write all inforation about matched  orders to clearing 
+   * write all inforation about matched  orders to clearing
    */
   private async addToClearing(
     order: Order,
@@ -300,7 +299,7 @@ export class OrderService {
     });
   }
 
-  //get sorted (limit and timestamp) list of all buy orders 
+  //get sorted (limit and timestamp) list of all buy orders
   private async getBuyOrders(shareId: string): Promise<Order[]> {
     return (
       await this.orderModel
