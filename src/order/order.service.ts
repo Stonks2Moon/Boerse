@@ -22,15 +22,22 @@ export class OrderService {
     private readonly msSocket: MSSocket,
   ) {}
 
+  //get all 'open' orders
   public async getOrders(): Promise<Order[]> {
     return this.orderModel.find();
   }
 
+  //get broker and id of order
   public async getOrder(broker: BrokerModel, id: string): Promise<Order> {
     if (!id || !isValidObjectId(id)) {
       throw new NotFoundException(`Invalid orderId: '${id}'`);
     }
 
+   /**
+    * check for order with given id and brokerId 
+    * @param _id: id of given order
+    * @param brokerId: id of broker who placed the order
+    */
     const order = await this.orderModel.findOne({
       _id: id,
       brokerId: broker.id,
@@ -42,6 +49,13 @@ export class OrderService {
     return order;
   }
 
+  /** 
+   * delete specific order
+   * @param broker: information about broker who placed order
+   * @param dto: information about order to be deleted
+   * get order information, call method order.delete()
+   * update orderbook + post request to delete order 
+   */
   public async deleteOrder(
     broker: BrokerModel,
     dto: DeleteOrderDto,
@@ -55,6 +69,13 @@ export class OrderService {
     }
   }
 
+  /** 
+   * place new order
+   * @param broker: information about broker who placed order
+   * @param dto: information about order to be placed
+   * create new order with timestamp 
+   * post request + call method orderPlaced
+   */  
   public async placeOrder(
     broker: BrokerModel,
     dto: PlaceOrderDto,
@@ -69,6 +90,10 @@ export class OrderService {
     await this.orderPlaced(order);
   }
 
+  /** 
+   * place order in orderbook 
+   * differentiate between buy order and sell order
+  */
   private async orderPlaced(order: Order): Promise<void> {
     if (order.type === 'buy') {
       await this.buyOrderPlaced(order);
@@ -76,6 +101,10 @@ export class OrderService {
       await this.sellOrderPlaced(order);
     }
 
+    /**
+     * delete all orders in orderbook?
+     * 
+     */
     const readyForDelete = await this.orderModel.find({ amount: { $lte: 0 } });
     readyForDelete.forEach(async (d) => {
       this.httpService.post(d.onComplete, new OrderCompletedDto(d));
@@ -86,6 +115,16 @@ export class OrderService {
     this.msSocket.server.emit('update-orderbook');
   }
 
+  /**
+   * place or match a buy order
+   * check for sell orders to match with:
+   * - if no sell orders, place buy order in orderbook
+   * - check if there are sell orders to match with, iterate through sell orders
+   *   if market order look for cheapest sell order
+   *   if limit order get prices and check if there is a fitting sell order 
+   *      if sell orders are higher than buy order limit - place buy order
+   *   else call this.match
+   */
   private async buyOrderPlaced(buyOrder: Order): Promise<void> {
     const { shareId } = buyOrder;
     const sellOrders = (await this.getSellOrders(shareId)).reverse();
@@ -115,6 +154,17 @@ export class OrderService {
     }
   }
 
+  
+  /**
+   * place or match a sell order
+   * check for buy orders to match with:
+   * - if no buy orders, place buy order in orderbook
+   * - check if there are buy orders to match with, iterate through buy orders
+   *   if market order look for max. buy order
+   *   if limit order get prices and check if there is a fitting buy order 
+   *      if buy orders are lower than sell order limit - place sell order
+   *   else call this.match
+   */
   private async sellOrderPlaced(sellOrder: Order): Promise<void> {
     const { shareId } = sellOrder;
     const buyOrders = await this.getBuyOrders(shareId);
@@ -145,7 +195,8 @@ export class OrderService {
   }
 
   /**
-   *
+   * match orders and update orderbook + refPrice
+   * for all sellorder and buyorder cases
    * @param price price
    * @param remaining remaining
    * @param shareId shareId
@@ -195,12 +246,22 @@ export class OrderService {
     return remaining;
   }
 
+  /**
+   * get limits of all orders in orderbook
+   * @param orders: all orders in orderbook -> array, so index given
+   */
   private getRemainingLimits(orders: Order[], index: number): number[] {
     return [...orders]
       .filter((x, k) => k >= index && x.limit)
       .map((x) => x.limit);
   }
 
+  /**
+   * update amount of specific orders after matching
+   * @param order: matched order
+   * @param amount: how many orders are left
+   * @param price: sold for what pricee
+   */
   private async updateOrderAmount(
     order: Order,
     amount: number,
@@ -214,6 +275,13 @@ export class OrderService {
     );
   }
 
+  /**
+   * after matching - write to clearing
+   * @param order: matched order
+   * @param amount: how many orders were matched
+   * @param price: sold for what pricee
+   * write all inforation about matched  orders to clearing 
+   */
   private async addToClearing(
     order: Order,
     amount: number,
@@ -232,6 +300,7 @@ export class OrderService {
     });
   }
 
+  //get sorted (limit and timestamp) list of all buy orders 
   private async getBuyOrders(shareId: string): Promise<Order[]> {
     return (
       await this.orderModel
@@ -247,6 +316,7 @@ export class OrderService {
     });
   }
 
+  //get sorted (limit and timestamp) list of all sell orders
   private async getSellOrders(shareId: string): Promise<Order[]> {
     return this.orderModel
       .find({
