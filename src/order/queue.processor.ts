@@ -11,8 +11,12 @@ export class QueueProcessor {
 
   @Process({ concurrency: 1 })
   async handleJob(job: Job<QueueItem>): Promise<void> {
+    // transform order
+    if (job.data.triggerId) {
+      await this.orderService.transformStopOrder(job.data.triggerId);
+    }
     // delete order
-    if ((job.data.dto as DeleteOrderDto).orderId) {
+    else if ((job.data.dto as DeleteOrderDto).orderId) {
       await this.orderService.deleteOrder(
         job.data.broker,
         job.data.dto as DeleteOrderDto,
@@ -23,9 +27,6 @@ export class QueueProcessor {
         job.data.broker,
         job.data.dto as PlaceOrderDto,
       );
-      // transform stop order to order
-    } else if (job.data.triggerId) {
-      await this.orderService.transformStopOrder(job.data.triggerId);
     }
   }
 }

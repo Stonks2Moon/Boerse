@@ -82,13 +82,6 @@ export class Order extends Document {
   @ApiProperty({ required: false })
   @Prop({ required: false })
   stop?: number;
-
-  @ApiProperty({ required: false })
-  @Prop({ required: false })
-  stopLimit?: number;
-
-  @Prop({ required: false })
-  stopTriggered?: boolean;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

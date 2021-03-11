@@ -109,9 +109,18 @@ export class OrderService {
     const refPriceStart = await this.shareService.getCurrentPrice(
       order.shareId,
     );
+
     if (order.type === 'buy') {
+      if (order.stop && refPriceStart < order.stop) {
+        this.msSocket.server.emit('update-orderbook');
+        return;
+      }
       await this.buyOrderPlaced(order);
     } else {
+      if (order.stop && refPriceStart > order.stop) {
+        this.msSocket.server.emit('update-orderbook');
+        return;
+      }
       await this.sellOrderPlaced(order);
     }
 
@@ -120,10 +129,12 @@ export class OrderService {
      *
      */
     const readyForDelete = await this.orderModel.find({ amount: { $lte: 0 } });
-    readyForDelete.forEach(async (d) => {
-      this.httpService.post(d.onComplete, new OrderCompletedDto(d));
-      await d.delete();
-    });
+    await Promise.all(
+      readyForDelete.map(async (d) => {
+        this.httpService.post(d.onComplete, new OrderCompletedDto(d));
+        await d.delete();
+      }),
+    );
 
     const refPriceEnd = await this.shareService.getCurrentPrice(order.shareId);
 
@@ -131,15 +142,21 @@ export class OrderService {
       await this.checkStopLimits({
         type: 'buy',
         shareId: order.shareId,
-        stopTriggered: { $exists: false },
-        $and: [{ stop: { $exists: true } }, { stop: { $gte: refPriceEnd } }],
+        $and: [
+          { stop: { $exists: true } },
+          { stop: { $ne: -1 } },
+          { stop: { $gte: refPriceEnd } },
+        ],
       });
     } else if (refPriceEnd < refPriceStart) {
       await this.checkStopLimits({
         type: 'sell',
         shareId: order.shareId,
-        stopTriggered: { $exists: false },
-        $and: [{ stop: { $exists: true } }, { stop: { $lte: refPriceEnd } }],
+        $and: [
+          { stop: { $exists: true } },
+          { stop: { $ne: -1 } },
+          { stop: { $lte: refPriceEnd } },
+        ],
       });
     }
     this.msSocket.server.emit('update-orderbook');
@@ -147,7 +164,7 @@ export class OrderService {
 
   private async checkStopLimits(query: FilterQuery<Order>): Promise<void> {
     const orders = await this.orderModel.find(query).sort({ timestamp: -1 });
-    await this.orderModel.updateMany(query, { $set: { stopTriggered: true } });
+    await this.orderModel.updateMany(query, { $set: { stop: -1 } });
 
     orders.forEach((o) => {
       this.stopTransformRequest(o._id);
@@ -158,10 +175,12 @@ export class OrderService {
     let order = await this.orderModel.findOne({ _id: orderId });
     if (!order) return;
 
-    order = await order.update({
-      $unset: { stopTriggered: 1, stop: 1 },
-      $set: { limit: order.stopLimit },
-    });
+    await this.orderModel.updateOne(
+      { _id: orderId },
+      { $unset: { stop: true } },
+    );
+
+    delete order.stop;
     await this.orderPlaced(order);
   }
 
@@ -334,7 +353,6 @@ export class OrderService {
       type: order.type,
       limit: order.limit,
       stop: order.stop,
-      stopLimit: order.stopLimit,
     });
   }
 
@@ -345,7 +363,7 @@ export class OrderService {
         .find({
           shareId: shareId,
           type: 'buy',
-          stopTriggered: { $exists: false },
+          stop: { $exists: false },
         })
         .sort({ limit: -1, timestamp: -1 })
     ).sort((a, b) => {
@@ -361,7 +379,7 @@ export class OrderService {
       .find({
         shareId: shareId,
         type: 'sell',
-        stopTriggered: { $exists: false },
+        stop: { $exists: false },
       })
       .sort({ limit: -1, timestamp: -1 });
   }

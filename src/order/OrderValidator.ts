@@ -23,7 +23,6 @@ export class OrderValidator {
       type,
       onMatch,
       stop,
-      stopLimit,
     } = order;
 
     if (!amount || typeof amount !== 'number') {
@@ -76,23 +75,10 @@ export class OrderValidator {
     if (stop && typeof stop !== 'number') {
       throw new UnprocessableEntityException('Stop needs to be of type number');
     }
+
     if (stop < 0) {
       throw new UnprocessableEntityException('Stop must be greater than zero');
     }
-
-    if (stopLimit && typeof stopLimit !== 'number') {
-      throw new UnprocessableEntityException(
-        'StopLimit needs to be of type number',
-      );
-    }
-
-    if (stopLimit && !stop) {
-      throw new UnprocessableEntityException(
-        'StopLimit cant be provided without a given stop',
-      );
-    }
-
-    if (stop && typeof stop === 'number' && !stopLimit) order.stopLimit = -1;
 
     return {
       shareId: order.shareId,
@@ -103,8 +89,7 @@ export class OrderValidator {
       onDelete: order.onDelete,
       type: order.type,
       limit: order.limit,
-      stop: order.stop,
-      stopLimit: order.stopLimit,
+      stop: stop <= 0 ? undefined : stop,
     };
   }
 }

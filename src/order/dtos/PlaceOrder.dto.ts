@@ -55,10 +55,4 @@ export class PlaceOrderDto {
     description: 'TODO:',
   })
   stop?: number;
-
-  @ApiProperty({
-    required: false,
-    description: 'TODO:',
-  })
-  stopLimit?: number;
 }
