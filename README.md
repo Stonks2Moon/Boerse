@@ -42,3 +42,7 @@ Vue.js
 * Swagger-UI zur Darstellung der REST Schnittstellen
 * Socket.io
 * REDIS
+
+## Datenmodelle
+
+[Datenmodelle](https://github.com/Stonks2Moon/BoersenAPI#datenmodelle)
