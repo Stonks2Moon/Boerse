@@ -6,6 +6,7 @@ import { PlaceOrderDto } from './PlaceOrder.dto';
 export class QueueItem {
   dto: PlaceOrderDto | DeleteOrderDto;
   broker: BrokerModel;
+  triggerId?: string;
 }
 
 export class QueuedJob {
@@ -13,6 +14,7 @@ export class QueuedJob {
   data: {
     dto: PlaceOrderDto | DeleteOrderDto;
     broker: BrokerModel;
+    triggerId?: string;
   };
 
   constructor(job: Job<QueueItem>) {

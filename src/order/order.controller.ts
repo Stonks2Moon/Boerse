@@ -17,16 +17,12 @@ import { PlaceOrderDto } from './dtos/PlaceOrder.dto';
 import { QueuedJob } from './dtos/QueueItem.dto';
 import { UnqueueJobDto } from './dtos/UnqueueJob.dto';
 import { OrderService } from './order.service';
-import { QueueService } from './queue.service';
 import { Order } from './schemas/Order.schema';
 
 @ApiTags('Order')
 @Controller('order')
 export class OrderController {
-  constructor(
-    private readonly orderService: OrderService,
-    private readonly queueService: QueueService,
-  ) {}
+  constructor(private readonly orderService: OrderService) {}
 
   @UseGuards(AuthGuard('jwt'))
   @Post()
@@ -34,7 +30,7 @@ export class OrderController {
     @MSBroker() broker: BrokerModel,
     @Body() dto: PlaceOrderDto,
   ): Promise<QueuedJob> {
-    return this.queueService.placeRequest(dto, broker);
+    return this.orderService.placeRequest(dto, broker);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -43,7 +39,7 @@ export class OrderController {
     @MSBroker() broker: BrokerModel,
     @Body() dto: DeleteOrderDto | UnqueueJobDto,
   ): Promise<QueuedJob | boolean> {
-    return this.queueService.deleteRequest(dto, broker);
+    return this.orderService.deleteRequest(dto, broker);
   }
 
   @BrokerTypes(['stockmarket'])

@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { BrokerModule } from './broker/broker.module';
 import { ClearingModule } from './clearing/clearing.module';
+import { MarketModule } from './market/market.module';
 import { MSSocket } from './MSSocket';
 import { OrderModule } from './order/order.module';
 import { ShareModule } from './share/share.module';
@@ -40,7 +41,7 @@ import { ShareModule } from './share/share.module';
     BrokerModule,
     ShareModule,
     ClearingModule,
-    // MarketModule,
+    MarketModule,
   ],
   providers: [MSSocket],
 })

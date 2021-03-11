@@ -7,7 +7,6 @@ import { ShareModule } from 'src/share/share.module';
 import { OrderController } from './order.controller';
 import { OrderService } from './order.service';
 import { QueueProcessor } from './queue.processor';
-import { QueueService } from './queue.service';
 import { Order, OrderSchema } from './schemas/Order.schema';
 
 @Module({
@@ -20,7 +19,7 @@ import { Order, OrderSchema } from './schemas/Order.schema';
     ShareModule,
     HttpModule,
   ],
-  providers: [OrderService, QueueService, QueueProcessor, MSSocket],
+  providers: [OrderService, QueueProcessor, MSSocket],
   controllers: [OrderController],
 })
 export class OrderModule {}

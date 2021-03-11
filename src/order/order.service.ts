@@ -1,6 +1,13 @@
-import { HttpService, Injectable, NotFoundException } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bull';
+import {
+  HttpService,
+  Injectable,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { isValidObjectId, Model } from 'mongoose';
+import { Queue } from 'bull';
+import { FilterQuery, isValidObjectId, Model } from 'mongoose';
 import { BrokerModel } from 'src/broker/models/Broker.model';
 import { Clearing } from 'src/clearing/schemas/Clearing.schema';
 import { MSSocket } from 'src/MSSocket';
@@ -10,11 +17,15 @@ import { OrderCompletedDto } from './dtos/OrderCompleted.dto';
 import { OrderDeletedDto } from './dtos/OrderDeleted.dto';
 import { OrderMatchedDto } from './dtos/OrderMatched.dto';
 import { PlaceOrderDto } from './dtos/PlaceOrder.dto';
+import { QueuedJob, QueueItem } from './dtos/QueueItem.dto';
+import { UnqueueJobDto } from './dtos/UnqueueJob.dto';
+import { OrderValidator } from './OrderValidator';
 import { Order } from './schemas/Order.schema';
 
 @Injectable()
 export class OrderService {
   constructor(
+    @InjectQueue('action') private readonly actionQueue: Queue<QueueItem>,
     @InjectModel(Order.name) private orderModel: Model<Order>,
     @InjectModel(Clearing.name) private clearingModel: Model<Clearing>,
     private readonly shareService: ShareService,
@@ -95,6 +106,9 @@ export class OrderService {
    * differentiate between buy order and sell order
    */
   private async orderPlaced(order: Order): Promise<void> {
+    const refPriceStart = await this.shareService.getCurrentPrice(
+      order.shareId,
+    );
     if (order.type === 'buy') {
       await this.buyOrderPlaced(order);
     } else {
@@ -110,9 +124,45 @@ export class OrderService {
       this.httpService.post(d.onComplete, new OrderCompletedDto(d));
       await d.delete();
     });
-    await this.orderModel.deleteMany({ amount: { $lte: 0 } });
 
+    const refPriceEnd = await this.shareService.getCurrentPrice(order.shareId);
+
+    if (refPriceEnd > refPriceStart) {
+      await this.checkStopLimits({
+        type: 'buy',
+        shareId: order.shareId,
+        stopTriggered: { $exists: false },
+        $and: [{ stop: { $exists: true } }, { stop: { $gte: refPriceEnd } }],
+      });
+    } else if (refPriceEnd < refPriceStart) {
+      await this.checkStopLimits({
+        type: 'sell',
+        shareId: order.shareId,
+        stopTriggered: { $exists: false },
+        $and: [{ stop: { $exists: true } }, { stop: { $lte: refPriceEnd } }],
+      });
+    }
     this.msSocket.server.emit('update-orderbook');
+  }
+
+  private async checkStopLimits(query: FilterQuery<Order>): Promise<void> {
+    const orders = await this.orderModel.find(query).sort({ timestamp: -1 });
+    await this.orderModel.updateMany(query, { $set: { stopTriggered: true } });
+
+    orders.forEach((o) => {
+      this.stopTransformRequest(o._id);
+    });
+  }
+
+  public async transformStopOrder(orderId: string): Promise<void> {
+    let order = await this.orderModel.findOne({ _id: orderId });
+    if (!order) return;
+
+    order = await order.update({
+      $unset: { stopTriggered: 1, stop: 1 },
+      $set: { limit: order.stopLimit },
+    });
+    await this.orderPlaced(order);
   }
 
   /**
@@ -212,35 +262,24 @@ export class OrderService {
   ): Promise<number> {
     await this.shareService.updatePrice(shareId, price);
 
-    if (mOrder.amount >= remaining) {
-      await this.updateOrderAmount(iOrder, remaining, price);
-      await this.updateOrderAmount(mOrder, remaining, price);
-
-      this.httpService.post(
-        iOrder.onMatch,
-        new OrderMatchedDto(iOrder, remaining),
-      );
-      this.httpService.post(
-        mOrder.onMatch,
-        new OrderMatchedDto(mOrder, remaining),
-      );
-
-      remaining = 0;
-    } else {
-      await this.updateOrderAmount(iOrder, mOrder.amount, price);
-      await this.updateOrderAmount(mOrder, mOrder.amount, price);
-
-      this.httpService.post(
-        iOrder.onMatch,
-        new OrderMatchedDto(iOrder, mOrder.amount),
-      );
-      this.httpService.post(
-        mOrder.onMatch,
-        new OrderMatchedDto(mOrder, mOrder.amount),
-      );
-
-      remaining -= mOrder.amount;
+    let { amount } = mOrder;
+    if (amount > remaining) {
+      amount = remaining;
     }
+
+    await this.updateOrderAmount(iOrder, amount, price);
+    await this.updateOrderAmount(mOrder, amount, price);
+
+    this.httpService.post(
+      iOrder.onMatch,
+      new OrderMatchedDto(iOrder, remaining),
+    );
+    this.httpService.post(
+      mOrder.onMatch,
+      new OrderMatchedDto(mOrder, remaining),
+    );
+
+    remaining -= amount;
 
     return remaining;
   }
@@ -306,6 +345,7 @@ export class OrderService {
         .find({
           shareId: shareId,
           type: 'buy',
+          stopTriggered: { $exists: false },
         })
         .sort({ limit: -1, timestamp: -1 })
     ).sort((a, b) => {
@@ -321,7 +361,65 @@ export class OrderService {
       .find({
         shareId: shareId,
         type: 'sell',
+        stopTriggered: { $exists: false },
       })
       .sort({ limit: -1, timestamp: -1 });
+  }
+
+  public async deleteRequest(
+    dto: DeleteOrderDto | UnqueueJobDto,
+    broker: BrokerModel,
+  ): Promise<QueuedJob | boolean> {
+    // unqueue job
+    if ((dto as any).jobId) {
+      return this.unqueueJob(dto as UnqueueJobDto, broker);
+    }
+    // delete order
+    else if ((dto as any).orderId) {
+      return this.deleteJob(dto as DeleteOrderDto, broker);
+    }
+  }
+
+  public async placeRequest(
+    dto: PlaceOrderDto,
+    broker: BrokerModel,
+  ): Promise<QueuedJob> {
+    dto = OrderValidator.validate(dto);
+
+    if (!(await this.shareService.getShare(dto.shareId))) {
+      throw new UnprocessableEntityException(
+        "Given share with id '" + dto.shareId + "' doesn't exist",
+      );
+    }
+
+    const job = await this.actionQueue.add({ dto, broker });
+    return new QueuedJob(job);
+  }
+
+  public async stopTransformRequest(orderId: string): Promise<void> {
+    await this.actionQueue.add({ dto: null, broker: null, triggerId: orderId });
+  }
+
+  private async deleteJob(
+    dto: DeleteOrderDto,
+    broker: BrokerModel,
+  ): Promise<QueuedJob> {
+    await this.getOrder(broker, dto.orderId);
+    const job = await this.actionQueue.add({ dto, broker }, { priority: 10 });
+    return new QueuedJob(job);
+  }
+
+  private async unqueueJob(
+    dto: UnqueueJobDto,
+    broker: BrokerModel,
+  ): Promise<boolean> {
+    const job = await this.actionQueue.getJob(dto.jobId);
+    if (!job) return false;
+
+    if (job.data.broker.id === broker.id) {
+      await job.remove();
+      return true;
+    }
+    return false;
   }
 }
