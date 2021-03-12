@@ -1,17 +1,6 @@
 import { UnprocessableEntityException } from '@nestjs/common';
 import { PlaceOrderDto } from './dtos/PlaceOrder.dto';
 
-// shareId: string;
-//   amount: number;
-
-//   onMatch?: string;
-//   onComplete: string;
-
-//   type: 'buy' | 'sell';
-//   limit: number;
-
-//   stop?: number;
-//   stopLimit?: number;
 export class OrderValidator {
   public static validate(order: PlaceOrderDto): PlaceOrderDto {
     const {
@@ -76,7 +65,7 @@ export class OrderValidator {
       throw new UnprocessableEntityException('Stop needs to be of type number');
     }
 
-    if (stop < 0) {
+    if (stop && stop < 0) {
       throw new UnprocessableEntityException('Stop must be greater than zero');
     }
 
@@ -88,8 +77,8 @@ export class OrderValidator {
       onComplete: order.onComplete,
       onDelete: order.onDelete,
       type: order.type,
-      limit: order.limit,
-      stop: stop <= 0 ? undefined : stop,
+      limit: (limit && limit > 0 ? limit : undefined,
+      stop: (stop && stop > 0) ? stop : undefined,
     };
   }
 }
