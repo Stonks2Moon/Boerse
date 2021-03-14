@@ -25,6 +25,14 @@ export class ShareService {
     return this.shareModel.find();
   }
 
+  public async getIsTradeable(shareId: string): Promise<boolean> {
+    if (!shareId || !isValidObjectId(shareId)) return false;
+    const share = await this.shareModel.findOne({ _id: shareId });
+    if (!share) return false;
+    if (share.tradeDisabled) return false;
+    return true;
+  }
+
   public async getCurrentPrice(id: string): Promise<number> {
     const share = await this.getShare(id);
     if (!share) return -1;

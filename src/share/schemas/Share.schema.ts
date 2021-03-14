@@ -8,6 +8,7 @@ import { Document } from 'mongoose';
     transform: (_doc: Share, ret: Share): Share => {
       delete ret._id;
       delete ret.__v;
+      delete ret.tradeDisabled;
       return ret;
     },
   },
@@ -36,6 +37,9 @@ export class Share extends Document {
   })
   @Prop()
   thumbnail: string;
+
+  @Prop({ required: false })
+  tradeDisabled?: boolean;
 }
 
 export const ShareSchema = SchemaFactory.createForClass(Share);

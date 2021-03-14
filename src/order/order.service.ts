@@ -404,9 +404,16 @@ export class OrderService {
   ): Promise<QueuedJob> {
     dto = OrderValidator.validate(dto);
 
-    if (!(await this.shareService.getShare(dto.shareId))) {
+    const share = await this.shareService.getShare(dto.shareId);
+    if (!share) {
       throw new UnprocessableEntityException(
         "Given share with id '" + dto.shareId + "' doesn't exist",
+      );
+    }
+
+    if (share.tradeDisabled) {
+      throw new UnprocessableEntityException(
+        "Given share can't be traded at the moment. Market is closed.",
       );
     }
 

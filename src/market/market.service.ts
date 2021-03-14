@@ -1,14 +1,25 @@
 import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Share } from 'src/share/schemas/Share.schema';
 
-export type MarketStatus = 'open' | 'closed';
+export enum MarketStatus {
+  OPEN = 'open',
+  CLOSED = 'closed',
+}
 
 @Injectable()
 export class MarketService {
-  // TODO: Database entry
-  public status: MarketStatus = 'open';
+  constructor(
+    @InjectModel(Share.name) private readonly shareModel: Model<Share>,
+  ) {}
 
   public async isOpen(): Promise<boolean> {
-    return (await this.getStatus()) === 'open';
+    const shares = await this.shareModel.find({
+      tradeDisabled: { $exists: true },
+    });
+    if (shares.length > 0) return false;
+    return true;
   }
 
   public async isClosed(): Promise<boolean> {
@@ -16,21 +27,26 @@ export class MarketService {
   }
 
   public async getStatus(): Promise<MarketStatus> {
-    return this.status;
+    const isOpen = await this.isOpen();
+    return isOpen ? MarketStatus.OPEN : MarketStatus.CLOSED;
   }
 
   public async setStatus(status: MarketStatus): Promise<boolean> {
-    this.status = status;
+    if (status === MarketStatus.OPEN) {
+      await this.openMarket();
+    } else {
+      await this.closeMarket();
+    }
     return true;
   }
 
   public async openMarket(): Promise<boolean> {
-    await this.setStatus('open');
+    await this.shareModel.updateMany({}, { $unset: { tradeDisabled: '' } });
     return true;
   }
 
   public async closeMarket(): Promise<boolean> {
-    await this.setStatus('closed');
+    await this.shareModel.updateMany({}, { $set: { tradeDisabled: true } });
     return true;
   }
 }
