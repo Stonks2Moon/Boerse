@@ -1,23 +1,31 @@
-import { InjectQueue } from '@nestjs/bull';
 import {
+  forwardRef,
   HttpService,
+  Inject,
   Injectable,
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Queue } from 'bull';
-import { FilterQuery, isValidObjectId, Model } from 'mongoose';
+import { JobId } from 'bull';
+import {
+  FilterQuery,
+  isValidObjectId,
+  LeanDocument,
+  Model,
+  _AllowStringsForIds,
+} from 'mongoose';
 import { BrokerModel } from 'src/broker/models/Broker.model';
 import { Clearing } from 'src/clearing/schemas/Clearing.schema';
 import { MSSocket } from 'src/MSSocket';
+import { QueuedJob } from 'src/queue/dtos/QueuedJob.dto';
+import { QueueService } from 'src/queue/queue.service';
 import { ShareService } from 'src/share/share.service';
 import { DeleteOrderDto } from './dtos/DeleteOrder.dto';
 import { OrderCompletedDto } from './dtos/OrderCompleted.dto';
 import { OrderDeletedDto } from './dtos/OrderDeleted.dto';
 import { OrderMatchedDto } from './dtos/OrderMatched.dto';
 import { PlaceOrderDto } from './dtos/PlaceOrder.dto';
-import { QueuedJob, QueueItem } from './dtos/QueueItem.dto';
 import { UnqueueJobDto } from './dtos/UnqueueJob.dto';
 import { OrderValidator } from './OrderValidator';
 import { Order } from './schemas/Order.schema';
@@ -25,9 +33,10 @@ import { Order } from './schemas/Order.schema';
 @Injectable()
 export class OrderService {
   constructor(
-    @InjectQueue('action') private readonly actionQueue: Queue<QueueItem>,
     @InjectModel(Order.name) private orderModel: Model<Order>,
     @InjectModel(Clearing.name) private clearingModel: Model<Clearing>,
+    @Inject(forwardRef(() => QueueService))
+    private readonly queueService: QueueService,
     private readonly shareService: ShareService,
     private readonly httpService: HttpService,
     private readonly msSocket: MSSocket,
@@ -53,6 +62,7 @@ export class OrderService {
       _id: id,
       brokerId: broker.id,
     });
+
     if (!order) {
       throw new NotFoundException(`Order with id '${id}' doesn't exist`);
     }
@@ -88,6 +98,7 @@ export class OrderService {
    * post request + call method orderPlaced
    */
   public async placeOrder(
+    jobId: JobId,
     broker: BrokerModel,
     dto: PlaceOrderDto,
   ): Promise<void> {
@@ -97,7 +108,10 @@ export class OrderService {
       timestamp: new Date().getTime(),
     });
 
-    this.httpService.post(order.onPlace, order);
+    this.httpService.post(order.onPlace, {
+      jobId: jobId.toString(),
+      ...order.toJSON(),
+    });
     await this.orderPlaced(order);
   }
 
@@ -138,25 +152,22 @@ export class OrderService {
 
     const refPriceEnd = await this.shareService.getCurrentPrice(order.shareId);
 
+    const filter: FilterQuery<_AllowStringsForIds<LeanDocument<Order>>>[] = [
+      { stop: { $exists: true } },
+      { stop: { $ne: -1 } },
+    ];
+
     if (refPriceEnd > refPriceStart) {
       await this.checkStopLimits({
         type: 'buy',
         shareId: order.shareId,
-        $and: [
-          { stop: { $exists: true } },
-          { stop: { $ne: -1 } },
-          { stop: { $gte: refPriceEnd } },
-        ],
+        $and: [...filter, { stop: { $gte: refPriceEnd } }],
       });
     } else if (refPriceEnd < refPriceStart) {
       await this.checkStopLimits({
         type: 'sell',
         shareId: order.shareId,
-        $and: [
-          { stop: { $exists: true } },
-          { stop: { $ne: -1 } },
-          { stop: { $lte: refPriceEnd } },
-        ],
+        $and: [...filter, { stop: { $lte: refPriceEnd } }],
       });
     }
     this.msSocket.server.emit('update-orderbook');
@@ -164,21 +175,20 @@ export class OrderService {
 
   private async checkStopLimits(query: FilterQuery<Order>): Promise<void> {
     const orders = await this.orderModel.find(query).sort({ timestamp: -1 });
-    await this.orderModel.updateMany(query, { $set: { stop: -1 } });
 
-    orders.forEach((o) => {
-      this.stopTransformRequest(o._id);
-    });
+    await Promise.all(
+      orders.map(async (o) => {
+        await o.update({ $set: { stop: -1 } });
+        this.queueService.stopTransformJob(o._id);
+      }),
+    );
   }
 
   public async transformStopOrder(orderId: string): Promise<void> {
     let order = await this.orderModel.findOne({ _id: orderId });
     if (!order) return;
 
-    await this.orderModel.updateOne(
-      { _id: orderId },
-      { $unset: { stop: true } },
-    );
+    await order.update({ $unset: { stop: true } });
 
     delete order.stop;
     await this.orderPlaced(order);
@@ -390,11 +400,11 @@ export class OrderService {
   ): Promise<QueuedJob | boolean> {
     // unqueue job
     if ((dto as any).jobId) {
-      return this.unqueueJob(dto as UnqueueJobDto, broker);
+      return this.queueService.unqueueJob(dto as UnqueueJobDto, broker);
     }
     // delete order
     else if ((dto as any).orderId) {
-      return this.deleteJob(dto as DeleteOrderDto, broker);
+      return this.queueService.deleteJob(dto as DeleteOrderDto, broker);
     }
   }
 
@@ -417,34 +427,6 @@ export class OrderService {
       );
     }
 
-    const job = await this.actionQueue.add({ dto, broker });
-    return new QueuedJob(job);
-  }
-
-  public async stopTransformRequest(orderId: string): Promise<void> {
-    await this.actionQueue.add({ dto: null, broker: null, triggerId: orderId });
-  }
-
-  private async deleteJob(
-    dto: DeleteOrderDto,
-    broker: BrokerModel,
-  ): Promise<QueuedJob> {
-    await this.getOrder(broker, dto.orderId);
-    const job = await this.actionQueue.add({ dto, broker }, { priority: 10 });
-    return new QueuedJob(job);
-  }
-
-  private async unqueueJob(
-    dto: UnqueueJobDto,
-    broker: BrokerModel,
-  ): Promise<boolean> {
-    const job = await this.actionQueue.getJob(dto.jobId);
-    if (!job) return false;
-
-    if (job.data.broker.id === broker.id) {
-      await job.remove();
-      return true;
-    }
-    return false;
+    return this.queueService.placeOrderJob(dto, broker);
   }
 }

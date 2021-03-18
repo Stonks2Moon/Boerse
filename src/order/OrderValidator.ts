@@ -77,8 +77,8 @@ export class OrderValidator {
       onComplete: order.onComplete,
       onDelete: order.onDelete,
       type: order.type,
-      limit: (limit && limit > 0 ? limit : undefined,
-      stop: (stop && stop > 0) ? stop : undefined,
+      limit: limit && limit > 0 ? limit : undefined,
+      stop: stop && stop > 0 ? stop : undefined,
     };
   }
 }

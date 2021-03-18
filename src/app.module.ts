@@ -8,6 +8,7 @@ import { MarketModule } from './market/market.module';
 import { MSSocket } from './MSSocket';
 import { OrderModule } from './order/order.module';
 import { ShareModule } from './share/share.module';
+import { QueueModule } from './queue/queue.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { ShareModule } from './share/share.module';
     ShareModule,
     ClearingModule,
     MarketModule,
+    QueueModule,
   ],
   providers: [MSSocket],
 })
