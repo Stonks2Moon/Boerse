@@ -23,5 +23,12 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         push: true
-        build-args: MONGO_CONNECTION=${{ secrets.MONGO_CONNECTION }}, JWT_SECRET_ARG=${{ secrets.JWT_SECRET }}, REDIS_HOST_ARG=${{ secrets.REDIS_HOST }}, REDIS_PORT_ARG=18278, REDIS_USER_ARG=${{ secrets.REDIS_USER }}, REDIS_PW_ARG=${{ secrets.REDIS_PW }}, REDIS_DB_ARG=${{ secrets.REDIS_DB }}
+        build-args: |
+          MONGO_CONNECTION=${{ secrets.MONGO_CONNECTION }}
+          JWT_SECRET_ARG=${{ secrets.JWT_SECRET }}
+          REDIS_HOST_ARG=${{ secrets.REDIS_HOST }}
+          REDIS_PORT_ARG=18278
+          REDIS_USER_ARG=${{ secrets.REDIS_USER }}
+          REDIS_PW_ARG=${{ secrets.REDIS_PW }}
+          REDIS_DB_ARG=${{ secrets.REDIS_DB }}
         tags: stonks2moon/${{ steps.string.outputs.lowercase }}:${{ github.sha }}
