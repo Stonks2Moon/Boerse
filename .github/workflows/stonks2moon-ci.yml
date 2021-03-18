@@ -31,4 +31,4 @@ jobs:
           REDIS_USER_ARG=${{ secrets.REDIS_USER }}
           REDIS_PW_ARG=${{ secrets.REDIS_PW }}
           REDIS_DB_ARG=MoonStonksQueue
-        tags: stonks2moon/${{ steps.string.outputs.lowercase }}:${{ github.sha }}
+        tags: stonks2moon/${{ steps.string.outputs.lowercase }}:${{ github.sha }}, stonks2moon/${{ steps.string.outputs.lowercase }}:latest
