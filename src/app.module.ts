@@ -17,22 +17,22 @@ import { QueueModule } from './queue/queue.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         return {
-          uri: config.get<string>("MONGO_CONNECTION"),
+          uri: configService.get<string>("MONGO_CONNECTION"),
         };
       },
     }),
     BullModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        return {
+      useFactory: (configService: ConfigService) => (
+        {
           redis: {
             host: configService.get('REDIS_HOST'),
             port: configService.get('REDIS_PORT'),
             username: configService.get('REDIS_USER'),
             password: configService.get('REDIS_PW'),
-          },
-        };
-      },
+          }
+        })
+      
     }),
     OrderModule,
     BrokerModule,
