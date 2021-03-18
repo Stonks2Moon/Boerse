@@ -43,8 +43,8 @@ export class Clearing extends Document {
   @ApiProperty({
     description: 'TODO:',
   })
-  @Prop()
-  limit: number;
+  @Prop({ required: false })
+  limit?: number;
 
   @ApiProperty({
     required: false,
@@ -52,13 +52,6 @@ export class Clearing extends Document {
   })
   @Prop({ required: false })
   stop?: number;
-
-  @ApiProperty({
-    required: false,
-    description: 'TODO:',
-  })
-  @Prop({ required: false })
-  stopLimit?: number;
 }
 
 export const ClearingSchema = SchemaFactory.createForClass(Clearing);
