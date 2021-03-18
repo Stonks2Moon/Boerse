@@ -17,11 +17,7 @@ import { QueueModule } from './queue/queue.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         return {
-          uri: `mongodb+srv://${configService.get(
-            'MONGO_USER',
-          )}:${configService.get('MONGO_PW')}@${configService.get(
-            'MONGO_DB',
-          )}/${configService.get('MONGO_TABLE')}?retryWrites=true&w=majority`,
+          uri: config.get<string>("MONGO_CONNECTION"),
         };
       },
     }),
