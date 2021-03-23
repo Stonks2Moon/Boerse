@@ -47,7 +47,11 @@ export class OrderService {
     return this.orderModel.find();
   }
 
-  //get broker and id of order
+  /**
+   * get Orders
+   * @param broker: iformation about broker
+   * @param id: id of Order
+   */
   public async getOrder(broker: BrokerModel, id: string): Promise<Order> {
     if (!id || !isValidObjectId(id)) {
       throw new NotFoundException(`Invalid orderId: '${id}'`);
@@ -92,6 +96,7 @@ export class OrderService {
 
   /**
    * place new order
+   * @param jobId: id of the Job placing the order
    * @param broker: information about broker who placed order
    * @param dto: information about order to be placed
    * create new order with timestamp
@@ -118,6 +123,7 @@ export class OrderService {
   /**
    * place order in orderbook
    * differentiate between buy order and sell order
+   * @param order: information about placed order
    */
   private async orderPlaced(order: Order): Promise<void> {
     const refPriceStart = await this.shareService.getCurrentPrice(
@@ -138,10 +144,7 @@ export class OrderService {
       await this.sellOrderPlaced(order);
     }
 
-    /**
-     * delete all orders in orderbook?
-     *
-     */
+    //check if order can be deleted
     const readyForDelete = await this.orderModel.find({ amount: { $lte: 0 } });
     await Promise.all(
       readyForDelete.map(async (d) => {
@@ -157,6 +160,7 @@ export class OrderService {
       { stop: { $ne: -1 } },
     ];
 
+   //update Orderbook after checking for Stop-Limit-Orders
     if (refPriceEnd > refPriceStart) {
       await this.checkStopLimits({
         type: 'buy',
@@ -173,6 +177,10 @@ export class OrderService {
     this.msSocket.server.emit('update-orderbook');
   }
 
+  /**
+   * check for Stop-Limit-Orders
+   * @param query: information about orders in query
+   */
   private async checkStopLimits(query: FilterQuery<Order>): Promise<void> {
     const orders = await this.orderModel.find(query).sort({ timestamp: -1 });
 
@@ -184,6 +192,10 @@ export class OrderService {
     );
   }
 
+  /**
+   * tranfsorm Stop-Order if Limit is reached
+   * @param orderId: id of this order
+   */
   public async transformStopOrder(orderId: string): Promise<void> {
     let order = await this.orderModel.findOne({ _id: orderId });
     if (!order) return;
@@ -203,6 +215,7 @@ export class OrderService {
    *   if limit order get prices and check if there is a fitting sell order
    *      if sell orders are higher than buy order limit - place buy order
    *   else call this.match
+   * @param buyOrder: information about this buyOrder 
    */
   private async buyOrderPlaced(buyOrder: Order): Promise<void> {
     const { shareId } = buyOrder;
@@ -242,6 +255,7 @@ export class OrderService {
    *   if limit order get prices and check if there is a fitting buy order
    *      if buy orders are lower than sell order limit - place sell order
    *   else call this.match
+   * @param sellOrder: informaiton about this sellOrder
    */
   private async sellOrderPlaced(sellOrder: Order): Promise<void> {
     const { shareId } = sellOrder;
@@ -275,11 +289,11 @@ export class OrderService {
   /**
    * match orders and update orderbook + refPrice
    * for all sellorder and buyorder cases
-   * @param price price
-   * @param remaining remaining
-   * @param shareId shareId
-   * @param iOrder input order
-   * @param mOrder matching order
+   * @param price: price of order
+   * @param remaining: remaining orders after previous matching
+   * @param shareId: shareId
+   * @param iOrder: information about input order
+   * @param mOrder: information about matching order
    * @returns reamining number
    */
   private async match(
@@ -316,6 +330,7 @@ export class OrderService {
   /**
    * get limits of all orders in orderbook
    * @param orders: all orders in orderbook -> array, so index given
+   * @param index: where to find order
    */
   private getRemainingLimits(orders: Order[], index: number): number[] {
     return [...orders]
@@ -366,7 +381,10 @@ export class OrderService {
     });
   }
 
-  //get sorted (limit and timestamp) list of all buy orders
+  /**
+   * get sorted (limit and timestamp) list of all buy orders
+   * @param shareId: id of share
+   */
   private async getBuyOrders(shareId: string): Promise<Order[]> {
     return (
       await this.orderModel
@@ -383,7 +401,10 @@ export class OrderService {
     });
   }
 
-  //get sorted (limit and timestamp) list of all sell orders
+  /**
+   * get sorted (limit and timestamp) list of all sell orders
+   * @param shareId: id of share
+   */
   private async getSellOrders(shareId: string): Promise<Order[]> {
     return this.orderModel
       .find({
@@ -394,6 +415,11 @@ export class OrderService {
       .sort({ limit: -1, timestamp: -1 });
   }
 
+  /**
+   * Request to delete an order
+   * @param dto: Job to delete an order
+   * @param broker: information about broker who sent deleteRequest 
+   */
   public async deleteRequest(
     dto: DeleteOrderDto | UnqueueJobDto,
     broker: BrokerModel,
@@ -408,6 +434,11 @@ export class OrderService {
     }
   }
 
+  /**
+   * Request to place an order
+   * @param dto: Job to place an order
+   * @param broker: information about broker who sent placeRequest
+   */
   public async placeRequest(
     dto: PlaceOrderDto,
     broker: BrokerModel,
