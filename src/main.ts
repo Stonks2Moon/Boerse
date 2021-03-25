@@ -5,6 +5,10 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
 
+  if (!process.env.LOCALHOST) {
+    app.setGlobalPrefix('api');
+  }
+
   const config = new DocumentBuilder()
     .setTitle('Börsen API')
     .setDescription('Die offizielle API der Börse')
