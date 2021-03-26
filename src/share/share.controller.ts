@@ -43,16 +43,19 @@ export class ShareController {
     name: 'from',
     required: false,
     description: 'Specify a timestamp as lower limit of the query',
+    example: 1616792676,
   })
   @ApiQuery({
     name: 'until',
     required: false,
     description: 'Specify a timestamp as upper limit of the query',
+    example: 1616702676,
   })
   @ApiQuery({
     name: 'limit',
     required: false,
     description: 'Specify the maximum number of results',
+    example: 10,
   })
   @ApiResponse({
     description:
