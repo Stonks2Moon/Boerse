@@ -160,7 +160,7 @@ export class OrderService {
       { stop: { $ne: -1 } },
     ];
 
-   //update Orderbook after checking for Stop-Limit-Orders
+    //update Orderbook after checking for Stop-Limit-Orders
     if (refPriceEnd > refPriceStart) {
       await this.checkStopLimits({
         type: 'buy',
@@ -215,7 +215,7 @@ export class OrderService {
    *   if limit order get prices and check if there is a fitting sell order
    *      if sell orders are higher than buy order limit - place buy order
    *   else call this.match
-   * @param buyOrder: information about this buyOrder 
+   * @param buyOrder: information about this buyOrder
    */
   private async buyOrderPlaced(buyOrder: Order): Promise<void> {
     const { shareId } = buyOrder;
@@ -418,7 +418,7 @@ export class OrderService {
   /**
    * Request to delete an order
    * @param dto: Job to delete an order
-   * @param broker: information about broker who sent deleteRequest 
+   * @param broker: information about broker who sent deleteRequest
    */
   public async deleteRequest(
     dto: DeleteOrderDto | UnqueueJobDto,

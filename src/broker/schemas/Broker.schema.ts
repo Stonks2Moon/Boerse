@@ -14,23 +14,29 @@ import { Document } from 'mongoose';
 })
 export class Broker extends Document {
   @ApiProperty({
-    description: 'TODO:',
+    description: 'Token of broker, to identify and authenticate.',
   })
   @Prop()
   token: string;
 
   @ApiProperty({
-    description: 'TODO:',
+    description: 'Type of broker. Important for clearing and access rights',
+    type: 'BrokerType',
+    example: 'business',
   })
   @Prop()
   type: 'private' | 'business' | 'simulation' | 'stockmarket';
 
   @ApiProperty({
-    description: 'TODO:',
+    description: 'Internal displayName for an specific broker',
+    example: 'Coinbase',
   })
   @Prop()
   displayName: string;
 
+  @ApiProperty({
+    description: 'Determines if broker is banned',
+  })
   @Prop({ required: false })
   banned?: boolean;
 }

@@ -13,31 +13,31 @@ export class PlaceOrderDto {
   amount: number;
 
   @ApiProperty({
-    description: 'TODO:',
+    description: 'POST Request URL to notify broker when order is placed.',
     example: "ASA there's one",
   })
   onPlace: string;
 
   @ApiProperty({
-    description: 'TODO:',
+    description: 'POST Request URL to notify broker when order is matched.',
     example: "ASA there's one",
   })
   onMatch: string;
 
   @ApiProperty({
-    description: 'TODO:',
+    description: 'POST Request URL to notify broker when order is completed.',
     example: "ASA there's one",
   })
   onComplete: string;
 
   @ApiProperty({
-    description: 'TODO:',
+    description: 'POST Request URL to notify broker when order is deleted.',
     example: "ASA there's one",
   })
   onDelete: string;
 
   @ApiProperty({
-    description: 'TODO:',
+    description: 'Type of order. Specifies if you want to buy or sell.',
     example: 'sell',
     type: 'OrderType',
   })
@@ -45,14 +45,17 @@ export class PlaceOrderDto {
 
   @ApiProperty({
     required: false,
-    description: 'TODO:',
+    description:
+      'Limit of order you want to place. Required for Limit and Stop Limit Order.',
     example: 200,
   })
   limit?: number;
 
   @ApiProperty({
     required: false,
-    description: 'TODO:',
+    description:
+      'Stop of order you want to place. Required for Stop Market and Stop Limit Order.',
+    example: 180,
   })
   stop?: number;
 }

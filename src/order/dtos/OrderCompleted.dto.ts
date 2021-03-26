@@ -3,12 +3,12 @@ import { Order } from '../schemas/Order.schema';
 
 export class OrderCompletedDto {
   @ApiProperty({
-    description: 'TODO:',
+    description: 'Unique ID of the completed order',
   })
   orderId: string;
 
   @ApiProperty({
-    description: 'TODO:',
+    description: 'Timestamp of the completed order',
   })
   timestamp: number;
 

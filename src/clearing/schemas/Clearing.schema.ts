@@ -5,50 +5,51 @@ import { Document } from 'mongoose';
 @Schema({ toJSON: { virtuals: true } })
 export class Clearing extends Document {
   @ApiProperty({
-    description: 'TODO:',
+    description: 'ID of the broker who placed order',
   })
   @Prop()
   brokerId: string;
 
   @ApiProperty({
-    description: 'TODO:',
+    description: 'ID of the share',
   })
   @Prop()
   shareId: string;
 
   @ApiProperty({
-    description: 'TODO:',
+    description: 'Timestamp of the order',
   })
   @Prop()
   timestamp: number;
 
   @ApiProperty({
-    description: 'TODO:',
+    description: 'Amount of the shares',
   })
   @Prop()
   amount: number;
 
   @ApiProperty({
-    description: 'TODO:',
+    description: 'Price of share that got traded',
   })
   @Prop()
   price: number;
 
   @ApiProperty({
-    description: 'TODO:',
+    description: 'Type of order. Specifies if bought or sold.',
   })
   @Prop()
   type: 'buy' | 'sell';
 
   @ApiProperty({
-    description: 'TODO:',
+    description: 'Limit of order. Required for Limit and Stop Limit Order.',
   })
   @Prop({ required: false })
   limit?: number;
 
   @ApiProperty({
     required: false,
-    description: 'TODO:',
+    description:
+      'Stop of order you want to place. Required for Stop Market and Stop Limit Order.',
   })
   @Prop({ required: false })
   stop?: number;

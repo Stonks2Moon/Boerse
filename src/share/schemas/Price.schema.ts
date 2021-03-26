@@ -26,7 +26,7 @@ export class Price extends Document {
   price: number;
 
   @ApiProperty({
-    description: 'The timestamp TODO:',
+    description: 'The timestamp of the transaction',
   })
   @Prop()
   timestamp: number;

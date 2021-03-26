@@ -3,17 +3,18 @@ import { Order } from '../schemas/Order.schema';
 
 export class OrderMatchedDto {
   @ApiProperty({
-    description: 'TODO:',
+    description: 'Unique ID of the matched order',
   })
   orderId: string;
 
   @ApiProperty({
-    description: 'TODO:',
+    description: 'Timestamp of the matched order',
   })
   timestamp: number;
 
   @ApiProperty({
-    description: 'TODO:',
+    description: 'The amount of remaining shares after matching',
+    example: 200,
   })
   amount: number;
 

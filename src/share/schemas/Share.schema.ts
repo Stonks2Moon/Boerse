@@ -38,6 +38,9 @@ export class Share extends Document {
   @Prop()
   thumbnail: string;
 
+  @ApiProperty({
+    description: 'Determines if trade is disabled for given share',
+  })
   @Prop({ required: false })
   tradeDisabled?: boolean;
 }
