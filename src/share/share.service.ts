@@ -43,20 +43,23 @@ export class ShareService {
     id: string,
     from?: number,
     until?: number,
+    limit?: number,
   ): Promise<Price[]> {
     if (!id || !isValidObjectId(id)) return [];
 
-    const filter = [];
+    let prices = this.priceModel.find({ shareId: id }).sort({ timestamp: -1 });
+
     if (from && typeof from === 'number') {
-      filter.push({ timestamp: { $gte: from } });
+      prices = prices.find({ timestamp: { $gte: from } });
     }
     if (until && typeof until === 'number') {
-      filter.push({ timestamp: { $lte: until } });
+      prices = prices.find({ timestamp: { $lte: until } });
     }
-    if (filter.length !== 0) {
-      return this.priceModel.find({ shareId: id, $and: filter }) || [];
+    if (limit && typeof limit === 'number') {
+      prices = prices.limit(limit);
     }
-    return this.priceModel.find({ shareId: id }) || [];
+
+    return prices;
   }
 
   public async updatePrice(shareId: string, price: number): Promise<void> {

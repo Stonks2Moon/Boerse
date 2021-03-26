@@ -9,12 +9,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { BrokerService } from './broker.service';
 import { BrokerTypeGuard, BrokerTypes } from './brokerType.guard';
 import { CreateBrokerDto } from './dtos/CreateBroker.dto';
 import { Broker } from './schemas/Broker.schema';
 
+@ApiBearerAuth()
 @ApiTags('Broker')
 @Controller('broker')
 export class BrokerController {

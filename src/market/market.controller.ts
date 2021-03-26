@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { BrokerTypeGuard, BrokerTypes } from 'src/broker/brokerType.guard';
 import { MarketService, MarketStatus } from './market.service';
 
@@ -24,6 +24,7 @@ export class MarketController {
     return this.marketService.getStatus();
   }
 
+  @ApiBearerAuth()
   @BrokerTypes(['stockmarket'])
   @UseGuards(AuthGuard('jwt'), BrokerTypeGuard)
   @Post('status')
@@ -33,6 +34,7 @@ export class MarketController {
     return this.marketService.setStatus(body.status);
   }
 
+  @ApiBearerAuth()
   @BrokerTypes(['stockmarket'])
   @UseGuards(AuthGuard('jwt'), BrokerTypeGuard)
   @Post('close')
@@ -40,6 +42,7 @@ export class MarketController {
     return this.marketService.closeMarket();
   }
 
+  @ApiBearerAuth()
   @BrokerTypes(['stockmarket'])
   @UseGuards(AuthGuard('jwt'), BrokerTypeGuard)
   @Post('open')

@@ -8,7 +8,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { MSBroker } from 'src/broker/broker.decorator';
 import { BrokerTypeGuard, BrokerTypes } from 'src/broker/brokerType.guard';
 import { BrokerModel } from 'src/broker/models/Broker.model';
@@ -24,6 +24,7 @@ import { Order } from './schemas/Order.schema';
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
+  @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Post()
   async placeOrder(
@@ -33,6 +34,7 @@ export class OrderController {
     return this.orderService.placeRequest(dto, broker);
   }
 
+  @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Delete()
   async deleteOrder(
@@ -42,6 +44,7 @@ export class OrderController {
     return this.orderService.deleteRequest(dto, broker);
   }
 
+  @ApiBearerAuth()
   @BrokerTypes(['stockmarket'])
   @UseGuards(AuthGuard('jwt'), BrokerTypeGuard)
   @Get('orders')
@@ -49,6 +52,7 @@ export class OrderController {
     return this.orderService.getOrders();
   }
 
+  @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Get(':id')
   async getOrderStatus(

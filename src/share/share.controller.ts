@@ -9,7 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { BrokerTypeGuard, BrokerTypes } from 'src/broker/brokerType.guard';
 import { CreateShareDto } from './dtos/CreateShare.dto';
 import { Price } from './schemas/Price.schema';
@@ -39,6 +39,21 @@ export class ShareController {
     return this.shareService.getCurrentPrice(id);
   }
 
+  @ApiQuery({
+    name: 'from',
+    required: false,
+    description: 'TODO:',
+  })
+  @ApiQuery({
+    name: 'until',
+    required: false,
+    description: 'TODO:',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'TODO:',
+  })
   @ApiResponse({
     description:
       "Returns a list of prices of a given share. List will be empty if share with id 'shareId' doesn't exist or the price list is empty.",
@@ -48,10 +63,12 @@ export class ShareController {
     @Param('id') id: string,
     @Query('from') from?: number,
     @Query('until') until?: number,
+    @Query('limit') limit?: number,
   ): Promise<Price[] | null> {
-    return this.shareService.getPrices(id, from, until);
+    return this.shareService.getPrices(id, +from, +until, +limit);
   }
 
+  @ApiBearerAuth()
   @ApiResponse({
     description: 'Returns the newly created share.',
   })
@@ -62,6 +79,7 @@ export class ShareController {
     return this.shareService.createShare(dto);
   }
 
+  @ApiBearerAuth()
   @ApiResponse({
     description: 'Returns the patched share.',
   })
