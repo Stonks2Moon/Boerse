@@ -9,7 +9,6 @@ async function bootstrap() {
     .setTitle('Börsen API')
     .setDescription('Die offizielle API der Börse')
     .setVersion('1.0')
-    .addServer(process.env.LOCALHOST ? '' : '../api')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
