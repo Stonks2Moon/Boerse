@@ -50,7 +50,7 @@ export class ShareService {
     if (from && typeof from === 'number') {
       filter.push({ timestamp: { $gte: from } });
     }
-    if (until && typeof 'until' === 'number') {
+    if (until && typeof until === 'number') {
       filter.push({ timestamp: { $lte: until } });
     }
     if (filter.length !== 0) {
