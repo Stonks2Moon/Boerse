@@ -51,7 +51,7 @@ export class ShareService {
       filter.push({ timestamp: { $gte: from } });
     }
     if (until && typeof 'until' === 'number') {
-      filter.push({ timestamp: { $lte: from } });
+      filter.push({ timestamp: { $lte: until } });
     }
     if (filter.length !== 0) {
       return this.priceModel.find({ shareId: id, $and: filter }) || [];
