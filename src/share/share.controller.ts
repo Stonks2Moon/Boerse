@@ -42,17 +42,17 @@ export class ShareController {
   @ApiQuery({
     name: 'from',
     required: false,
-    description: 'TODO:',
+    description: 'Specify a timestamp as lower limit of the query',
   })
   @ApiQuery({
     name: 'until',
     required: false,
-    description: 'TODO:',
+    description: 'Specify a timestamp as upper limit of the query',
   })
   @ApiQuery({
     name: 'limit',
     required: false,
-    description: 'TODO:',
+    description: 'Specify the maximum number of results',
   })
   @ApiResponse({
     description:
