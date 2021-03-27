@@ -9,7 +9,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiBearerAuth, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { BrokerTypeGuard, BrokerTypes } from 'src/broker/brokerType.guard';
 import { CreateShareDto } from './dtos/CreateShare.dto';
 import { Price } from './schemas/Price.schema';
@@ -30,6 +36,10 @@ export class ShareController {
     return this.shareService.getAvailableShares();
   }
 
+  @ApiParam({
+    name: 'id',
+    example: '6037e67c8407c737441517d6',
+  })
   @ApiResponse({
     description:
       "The current price of a given share. Price will be null if share with id 'shareId' doesn't exist.",
@@ -39,17 +49,21 @@ export class ShareController {
     return this.shareService.getCurrentPrice(id);
   }
 
+  @ApiParam({
+    name: 'id',
+    example: '6037e67c8407c737441517d6',
+  })
   @ApiQuery({
     name: 'from',
     required: false,
     description: 'Specify a timestamp as lower limit of the query',
-    example: 1616792676,
+    example: 1616792676000,
   })
   @ApiQuery({
     name: 'until',
     required: false,
     description: 'Specify a timestamp as upper limit of the query',
-    example: 1616702676,
+    example: 1616702676000,
   })
   @ApiQuery({
     name: 'limit',

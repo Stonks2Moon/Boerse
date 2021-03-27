@@ -3,6 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 export class PlaceOrderDto {
   @ApiProperty({
     description: 'The id of the share you want to place an order for',
+    example: '6037e67c8407c737441517d6',
   })
   shareId: string;
 
