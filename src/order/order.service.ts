@@ -89,7 +89,7 @@ export class OrderService {
     if (order) {
       const orderDeleted = new OrderDeletedDto(order);
       await order.delete();
-      this.msSocket.server.emit('update-orderbook');
+      this.msSocket.server.to('stockmarket').emit('update-orderbook');
       this.httpService.post(order.onDelete, orderDeleted);
     }
   }
@@ -132,19 +132,19 @@ export class OrderService {
 
     if (order.type === 'buy') {
       if (order.stop && refPriceStart < order.stop) {
-        this.msSocket.server.emit('update-orderbook');
+        this.msSocket.server.to('stockmarket').emit('update-orderbook');
         return;
       }
       await this.buyOrderPlaced(order);
     } else {
       if (order.stop && refPriceStart > order.stop) {
-        this.msSocket.server.emit('update-orderbook');
+        this.msSocket.server.to('stockmarket').emit('update-orderbook');
         return;
       }
       await this.sellOrderPlaced(order);
     }
 
-    //check if order can be deleted
+    // check if order can be deleted
     const readyForDelete = await this.orderModel.find({ amount: { $lte: 0 } });
     await Promise.all(
       readyForDelete.map(async (d) => {
@@ -160,7 +160,7 @@ export class OrderService {
       { stop: { $ne: -1 } },
     ];
 
-    //update Orderbook after checking for Stop-Limit-Orders
+    // update Orderbook after checking for Stop-Limit-Orders
     if (refPriceEnd > refPriceStart) {
       await this.checkStopLimits({
         type: 'buy',
@@ -174,7 +174,7 @@ export class OrderService {
         $and: [...filter, { stop: { $lte: refPriceEnd } }],
       });
     }
-    this.msSocket.server.emit('update-orderbook');
+    this.msSocket.server.to('stockmarket').emit('update-orderbook');
   }
 
   /**
@@ -310,6 +310,10 @@ export class OrderService {
       amount = remaining;
     }
 
+    this.msSocket.server
+      .to('stockmarket')
+      .emit('match', { shareId: shareId, amount: amount, price: price });
+
     await this.updateOrderAmount(iOrder, amount, price);
     await this.updateOrderAmount(mOrder, amount, price);
 
@@ -425,11 +429,11 @@ export class OrderService {
     broker: BrokerModel,
   ): Promise<QueuedJob | boolean> {
     // unqueue job
-    if ((dto as any).jobId) {
+    if ((dto as UnqueueJobDto).jobId) {
       return this.queueService.unqueueJob(dto as UnqueueJobDto, broker);
     }
     // delete order
-    else if ((dto as any).orderId) {
+    else if ((dto as DeleteOrderDto).orderId) {
       return this.queueService.deleteJob(dto as DeleteOrderDto, broker);
     }
   }
