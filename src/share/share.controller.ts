@@ -21,60 +21,41 @@ import { CreateShareDto } from './dtos/CreateShare.dto';
 import { Price } from './schemas/Price.schema';
 import { Share } from './schemas/Share.schema';
 import { ShareService } from './share.service';
+import {
+  PARAM_SHARE_ID,
+  QUERY_FROM_TS,
+  QUERY_LIMIT,
+  QUERY_UNTIL_TS,
+  RESPONSE_AVAILABLE_SHARES,
+  RESPONSE_CREATE_SHARE,
+  RESPONSE_CURRENT_PRICE,
+  RESPONSE_PATCH_SHARE,
+  RESPONSE_PRICES,
+} from './Share.swagger';
 
 @ApiTags('Share')
 @Controller('share')
 export class ShareController {
   constructor(private readonly shareService: ShareService) {}
 
-  @ApiResponse({
-    description:
-      'Returns an array with all tradeable shares and their current prices.',
-  })
-  @Get('')
+  @ApiResponse(RESPONSE_AVAILABLE_SHARES)
+  @Get()
   async getAvailableShares(): Promise<Share[]> {
     return this.shareService.getAvailableShares();
   }
 
-  @ApiParam({
-    name: 'id',
-    example: '6037e67c8407c737441517d6',
-  })
-  @ApiResponse({
-    description:
-      "The current price of a given share. Price will be null if share with id 'shareId' doesn't exist.",
-  })
+  @ApiParam(PARAM_SHARE_ID)
+  @ApiResponse(RESPONSE_CURRENT_PRICE)
   @Get('price/:id')
   async getCurrentPrice(@Param('id') id: string): Promise<number | null> {
     return this.shareService.getCurrentPrice(id);
   }
 
-  @ApiParam({
-    name: 'id',
-    example: '6037e67c8407c737441517d6',
-  })
-  @ApiQuery({
-    name: 'from',
-    required: false,
-    description: 'Specify a timestamp as lower limit of the query',
-    example: 1616792676000,
-  })
-  @ApiQuery({
-    name: 'until',
-    required: false,
-    description: 'Specify a timestamp as upper limit of the query',
-    example: 1616702676000,
-  })
-  @ApiQuery({
-    name: 'limit',
-    required: false,
-    description: 'Specify the maximum number of results',
-    example: 10,
-  })
-  @ApiResponse({
-    description:
-      "Returns a list of prices of a given share. List will be empty if share with id 'shareId' doesn't exist or the price list is empty.",
-  })
+  @ApiParam(PARAM_SHARE_ID)
+  @ApiQuery(QUERY_FROM_TS)
+  @ApiQuery(QUERY_UNTIL_TS)
+  @ApiQuery(QUERY_LIMIT)
+  @ApiResponse(RESPONSE_PRICES)
   @Get('prices/:id')
   async getPrices(
     @Param('id') id: string,
@@ -86,20 +67,16 @@ export class ShareController {
   }
 
   @ApiBearerAuth()
-  @ApiResponse({
-    description: 'Returns the newly created share.',
-  })
+  @ApiResponse(RESPONSE_CREATE_SHARE)
   @BrokerTypes(['stockmarket'])
   @UseGuards(AuthGuard('jwt'), BrokerTypeGuard)
-  @Post('')
+  @Post()
   async createShare(@Body() dto: CreateShareDto): Promise<Share> {
     return this.shareService.createShare(dto);
   }
 
   @ApiBearerAuth()
-  @ApiResponse({
-    description: 'Returns the patched share.',
-  })
+  @ApiResponse(RESPONSE_PATCH_SHARE)
   @BrokerTypes(['stockmarket'])
   @UseGuards(AuthGuard('jwt'), BrokerTypeGuard)
   @Patch(':id')
