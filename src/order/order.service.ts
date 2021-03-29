@@ -49,7 +49,7 @@ export class OrderService {
 
   /**
    * get Orders
-   * @param broker: iformation about broker
+   * @param broker: information about broker
    * @param id: id of Order
    */
   public async getOrder(broker: BrokerModel, id: string): Promise<Order> {

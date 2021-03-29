@@ -9,6 +9,31 @@ export const css = `
   color: #fff;
 }
 
+.swagger-ui .dialog-ux .modal-ux-content p {
+  color: #fff;
+  font-size: 16px;
+}
+
+.swagger-ui label {
+  display: none;
+}
+
+.swagger-ui .dialog-ux .modal-ux-content h4 {
+  color: #fff;
+}
+
+.swagger-ui .dialog-ux .modal-ux-header h3 {
+  color: #fff;
+}
+
+.swagger-ui .dialog-ux .modal-ux {
+  background: black;
+}
+
+.swagger-ui .scheme-container {
+  background: black;
+}
+
 .swagger-ui .opblock-tag {
   border-color: rgba(255, 255, 255, 0.3)
 }

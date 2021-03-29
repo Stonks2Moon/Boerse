@@ -18,6 +18,13 @@ async function bootstrap() {
     .setTitle('Börsen API')
     .setDescription('Die offizielle API der Börse')
     .setVersion('1.0')
+    .addBearerAuth({
+      in: 'header',
+      type: 'http',
+      bearerFormat: 'JWT',
+      name: 'JWT',
+      description: 'Enter your given JWT token',
+    })
     .build();
 
   const options: SwaggerCustomOptions = {

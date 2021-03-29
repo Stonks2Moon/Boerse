@@ -8,7 +8,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger';
 import { MSBroker } from 'src/broker/broker.decorator';
 import { BrokerTypeGuard, BrokerTypes } from 'src/broker/brokerType.guard';
 import { BrokerModel } from 'src/broker/models/Broker.model';
@@ -53,6 +53,7 @@ export class OrderController {
   }
 
   @ApiBearerAuth()
+  @ApiParam({ name: 'id', example: '6053133b6f29c24f4851dd7e' })
   @UseGuards(AuthGuard('jwt'))
   @Get(':id')
   async getOrderStatus(

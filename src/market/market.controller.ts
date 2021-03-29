@@ -21,6 +21,8 @@ export class MarketController {
 
   @ApiResponse({
     description: 'Returns current state of market',
+    content: { 'text/plain': { schema: { example: 'open' } } },
+    status: 200,
   })
   @Get('status')
   public async getStatus(): Promise<string> {
