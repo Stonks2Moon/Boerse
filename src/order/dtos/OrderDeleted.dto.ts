@@ -9,11 +9,13 @@ export class OrderDeletedDto {
 
   @ApiProperty({
     description: 'Timestamp of the deleted order',
+    example: 1615456461931,
   })
   timestamp: number;
 
   @ApiProperty({
     description: 'The remaining amount of shares you wanted to buy or sell',
+    example: 200,
   })
   remaining: number;
 

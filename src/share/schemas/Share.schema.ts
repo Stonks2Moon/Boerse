@@ -16,24 +16,29 @@ import { Document } from 'mongoose';
 export class Share extends Document {
   @ApiProperty({
     description: "The share's displayname",
+    example: 'Mondgestein',
   })
   @Prop()
   name: string;
 
   @ApiProperty({
     description: "The share's current value",
+    example: 150,
   })
   @Prop()
   price: number;
 
   @ApiProperty({
     description: 'Display color for texts or anything else',
+    example: '#b9050b',
   })
   @Prop()
   color: string;
 
   @ApiProperty({
     description: 'Thumbnail of the assets (e.g. coin)',
+    example:
+      'https://timos.s3.eu-central-1.amazonaws.com/moonstonks/MarsCoin.webp',
   })
   @Prop()
   thumbnail: string;

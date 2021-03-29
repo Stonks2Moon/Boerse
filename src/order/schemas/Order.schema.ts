@@ -20,18 +20,21 @@ import { Document } from 'mongoose';
 export class Order extends Document {
   @ApiProperty({
     description: 'ID of the broker who placed order',
+    example: 'brokerID',
   })
   @Prop()
   brokerId: string;
 
   @ApiProperty({
     description: 'ID of the share',
+    example: '6046b43b6008b9436c4f458d',
   })
   @Prop()
   shareId: string;
 
   @ApiProperty({
     description: 'Timestamp of the order',
+    example: 1615456461931,
   })
   @Prop()
   timestamp: number;
@@ -83,6 +86,7 @@ export class Order extends Document {
     required: false,
     description:
       'Limit of order you want to place. Required for Limit and Stop Limit Order.',
+    example: 200,
   })
   @Prop({ required: false })
   limit?: number;
@@ -91,10 +95,9 @@ export class Order extends Document {
     required: false,
     description:
       'Stop of order you want to place. Required for Stop Market and Stop Limit Order.',
+    example: 200,
   })
-  @Prop({
-    required: false,
-  })
+  @Prop({ required: false })
   stop?: number;
 }
 

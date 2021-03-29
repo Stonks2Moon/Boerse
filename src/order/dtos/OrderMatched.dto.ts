@@ -9,6 +9,7 @@ export class OrderMatchedDto {
 
   @ApiProperty({
     description: 'Timestamp of the matched order',
+    example: 1615456461931,
   })
   timestamp: number;
 

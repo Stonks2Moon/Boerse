@@ -9,6 +9,7 @@ export class OrderCompletedDto {
 
   @ApiProperty({
     description: 'Timestamp of the completed order',
+    example: 1615456461931,
   })
   timestamp: number;
 

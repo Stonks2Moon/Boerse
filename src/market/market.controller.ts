@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { BrokerTypeGuard, BrokerTypes } from 'src/broker/brokerType.guard';
 import { MarketService, MarketStatus } from './market.service';
 
@@ -19,6 +19,9 @@ export class MarketController {
     return this.marketService.isClosed();
   }
 
+  @ApiResponse({
+    description: 'Returns current state of market',
+  })
   @Get('status')
   public async getStatus(): Promise<string> {
     return this.marketService.getStatus();

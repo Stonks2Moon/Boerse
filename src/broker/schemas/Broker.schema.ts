@@ -15,6 +15,7 @@ import { Document } from 'mongoose';
 export class Broker extends Document {
   @ApiProperty({
     description: 'Token of broker, to identify and authenticate.',
+    example: 'yourToken',
   })
   @Prop()
   token: string;

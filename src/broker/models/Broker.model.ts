@@ -2,18 +2,21 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class BrokerModel {
   @ApiProperty({
-    description: 'Token of broker, to identify and authenticate.',
+    description: 'Unique ID of broker',
+    example: 'brokerID',
   })
   id: string;
 
   @ApiProperty({
     description: 'Type of broker. Important for clearing and access rights',
     type: 'BrokerType',
+    example: 'private',
   })
   type: 'private' | 'business' | 'simulation' | 'stockmarket';
 
   @ApiProperty({
     description: 'Internal displayName for an specific broker',
+    example: 'Coinbase',
   })
   displayName: string;
 
