@@ -52,7 +52,7 @@ export class OrderService {
   }
 
   private sendCallback(url: string, data: any): void {
-    if (this.isURL(url)) {
+    //if (this.isURL(url)) {
       this.httpService
         .post(url, data)
         .toPromise()
@@ -60,7 +60,7 @@ export class OrderService {
         .catch(() =>
           console.error("[Order Service]\t Couldn't post to url: " + url),
         );
-    }
+    //}
   }
 
   //get all 'open' orders
