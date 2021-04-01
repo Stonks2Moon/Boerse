@@ -1,6 +1,9 @@
 import { UnprocessableEntityException } from '@nestjs/common';
 import { PlaceOrderDto } from './dtos/PlaceOrder.dto';
 
+const MAX_AMOUNT = 10000;
+const MAX_DIGITS = 2;
+
 export class OrderValidator {
   public static validate(order: PlaceOrderDto): PlaceOrderDto {
     const {
@@ -19,9 +22,10 @@ export class OrderValidator {
         'Amount needs to be assigned and of type number',
       );
     }
-    if (amount < 0) {
+
+    if (amount < 0 || amount > MAX_AMOUNT) {
       throw new UnprocessableEntityException(
-        'Amount must be greater than zero',
+        'Amount needs to be between 1 and 10000.',
       );
     }
 
@@ -61,12 +65,30 @@ export class OrderValidator {
       );
     }
 
+    if (limit && limit % 1 != 0) {
+      let limit_digits = limit.toString().split('.');
+      if (limit_digits[1].length > MAX_DIGITS) {
+        throw new UnprocessableEntityException(
+          'Limit cannot have more than 2 digits',
+        );
+      }
+    }
+
     if (stop && typeof stop !== 'number') {
       throw new UnprocessableEntityException('Stop needs to be of type number');
     }
 
     if (stop && stop < 0) {
       throw new UnprocessableEntityException('Stop must be greater than zero');
+    }
+
+    if (stop && stop % 1 != 0) {
+      let stop_digits = stop.toString().split('.');
+      if (stop_digits[1].length > MAX_DIGITS) {
+        throw new UnprocessableEntityException(
+          'Stop cannot have more than 2 digits',
+        );
+      }
     }
 
     return {
