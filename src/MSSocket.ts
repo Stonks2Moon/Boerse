@@ -19,7 +19,9 @@ export class MSSocket {
     @MessageBody() token: string,
     @ConnectedSocket() client: Socket,
   ): void {
-    const broker = verify(token, process.env.JWT_SECRET) as BrokerModel;
-    client.join(broker.type);
+    try {
+      const broker = verify(token, process.env.JWT_SECRET) as BrokerModel;
+      client.join(broker.type);
+    } catch (_) {}
   }
 }

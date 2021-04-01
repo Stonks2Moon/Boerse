@@ -57,7 +57,9 @@ export class OrderService {
         .post(url, data)
         .toPromise()
         .then(NOOP)
-        .catch(console.error);
+        .catch(() =>
+          console.error("[Order Service]\t Couldn't post to url: " + url),
+        );
     }
   }
 
