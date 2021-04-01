@@ -113,10 +113,11 @@ export class OrderService {
       timestamp: new Date().getTime(),
     });
 
-    this.httpService.post(order.onPlace, {
+    const res = await this.httpService.post(order.onPlace, {
       jobId: jobId.toString(),
       ...order.toJSON(),
-    });
+    }).toPromise();
+     console.log(res);
     await this.orderPlaced(order);
   }
 
