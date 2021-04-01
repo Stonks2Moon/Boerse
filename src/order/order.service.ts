@@ -90,7 +90,11 @@ export class OrderService {
       const orderDeleted = new OrderDeletedDto(order);
       await order.delete();
       this.msSocket.server.to('stockmarket').emit('update-orderbook');
-      await this.httpService.post(order.onDelete, orderDeleted).toPromise();
+      try {
+        await this.httpService.post(order.onDelete, orderDeleted).toPromise();
+      } catch (error) {
+        console.error("Request URL doesn't exist.");
+      }
     }
   }
 
@@ -113,12 +117,16 @@ export class OrderService {
       timestamp: new Date().getTime(),
     });
 
-    await this.httpService
-      .post(order.onPlace, {
-        jobId: jobId.toString(),
-        ...order.toJSON(),
-      })
-      .toPromise();
+    try {
+      await this.httpService
+        .post(order.onPlace, {
+          jobId: jobId.toString(),
+          ...order.toJSON(),
+        })
+        .toPromise();
+    } catch (error) {
+      console.error("Request URL doesn't exist.");
+    }
 
     await this.orderPlaced(order);
   }
@@ -151,9 +159,14 @@ export class OrderService {
     const readyForDelete = await this.orderModel.find({ amount: { $lte: 0 } });
     await Promise.all(
       readyForDelete.map(async (d) => {
-        await this.httpService
-          .post(d.onComplete, new OrderCompletedDto(d))
-          .toPromise();
+        try {
+          await this.httpService
+            .post(d.onComplete, new OrderCompletedDto(d))
+            .toPromise();
+        } catch (error) {
+          console.error("Request URL doesn't exist.");
+        }
+
         await d.delete();
       }),
     );
@@ -322,12 +335,16 @@ export class OrderService {
     await this.updateOrderAmount(iOrder, amount, price);
     await this.updateOrderAmount(mOrder, amount, price);
 
-    await this.httpService
-      .post(iOrder.onMatch, new OrderMatchedDto(iOrder, remaining))
-      .toPromise();
-    await this.httpService
-      .post(mOrder.onMatch, new OrderMatchedDto(mOrder, remaining))
-      .toPromise();
+    try {
+      await this.httpService
+        .post(iOrder.onMatch, new OrderMatchedDto(iOrder, remaining))
+        .toPromise();
+      await this.httpService
+        .post(mOrder.onMatch, new OrderMatchedDto(mOrder, remaining))
+        .toPromise();
+    } catch (error) {
+      console.error("Request URL doesn't exist.");
+    }
 
     remaining -= amount;
 
