@@ -30,6 +30,8 @@ import { UnqueueJobDto } from './dtos/UnqueueJob.dto';
 import { OrderValidator } from './OrderValidator';
 import { Order } from './schemas/Order.schema';
 
+const NOOP = () => {};
+
 @Injectable()
 export class OrderService {
   constructor(
@@ -41,6 +43,23 @@ export class OrderService {
     private readonly httpService: HttpService,
     private readonly msSocket: MSSocket,
   ) {}
+
+  private isURL(url: string): boolean {
+    const res = url.match(
+      /(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g,
+    );
+    return res !== null;
+  }
+
+  private sendCallback(url: string, data: any): void {
+    if (this.isURL(url)) {
+      this.httpService
+        .post(url, data)
+        .toPromise()
+        .then(NOOP)
+        .catch(console.error);
+    }
+  }
 
   //get all 'open' orders
   public async getOrders(): Promise<Order[]> {
@@ -90,11 +109,7 @@ export class OrderService {
       const orderDeleted = new OrderDeletedDto(order);
       await order.delete();
       this.msSocket.server.to('stockmarket').emit('update-orderbook');
-      try {
-        await this.httpService.post(order.onDelete, orderDeleted).toPromise();
-      } catch (error) {
-        console.error("Request URL doesn't exist.");
-      }
+      this.sendCallback(order.onDelete, orderDeleted);
     }
   }
 
@@ -117,16 +132,10 @@ export class OrderService {
       timestamp: new Date().getTime(),
     });
 
-    try {
-      await this.httpService
-        .post(order.onPlace, {
-          jobId: jobId.toString(),
-          ...order.toJSON(),
-        })
-        .toPromise();
-    } catch (error) {
-      console.error("Request URL doesn't exist.");
-    }
+    this.sendCallback(order.onPlace, {
+      jobId: jobId.toString(),
+      ...order.toJSON(),
+    });
 
     await this.orderPlaced(order);
   }
@@ -159,14 +168,7 @@ export class OrderService {
     const readyForDelete = await this.orderModel.find({ amount: { $lte: 0 } });
     await Promise.all(
       readyForDelete.map(async (d) => {
-        try {
-          await this.httpService
-            .post(d.onComplete, new OrderCompletedDto(d))
-            .toPromise();
-        } catch (error) {
-          console.error("Request URL doesn't exist.");
-        }
-
+        this.sendCallback(d.onComplete, new OrderCompletedDto(d));
         await d.delete();
       }),
     );
@@ -335,16 +337,14 @@ export class OrderService {
     await this.updateOrderAmount(iOrder, amount, price);
     await this.updateOrderAmount(mOrder, amount, price);
 
-    try {
-      await this.httpService
-        .post(iOrder.onMatch, new OrderMatchedDto(iOrder, remaining))
-        .toPromise();
-      await this.httpService
-        .post(mOrder.onMatch, new OrderMatchedDto(mOrder, remaining))
-        .toPromise();
-    } catch (error) {
-      console.error("Request URL doesn't exist.");
-    }
+    this.sendCallback(
+      iOrder.onMatch,
+      new OrderMatchedDto(iOrder, remaining, price),
+    );
+    this.sendCallback(
+      mOrder.onMatch,
+      new OrderMatchedDto(mOrder, remaining, price),
+    );
 
     remaining -= amount;
 

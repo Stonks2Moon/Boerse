@@ -19,9 +19,16 @@ export class OrderMatchedDto {
   })
   amount: number;
 
-  constructor(order: Order, amount: number) {
+  @ApiProperty({
+    description: 'The price for which the order has been executed',
+    example: 420,
+  })
+  price: number;
+
+  constructor(order: Order, amount: number, price: number) {
     this.orderId = order._id;
     this.timestamp = new Date().getTime();
     this.amount = amount;
+    this.price = price;
   }
 }
