@@ -90,7 +90,7 @@ export class OrderService {
       const orderDeleted = new OrderDeletedDto(order);
       await order.delete();
       this.msSocket.server.to('stockmarket').emit('update-orderbook');
-      this.httpService.post(order.onDelete, orderDeleted);
+      await this.httpService.post(order.onDelete, orderDeleted).toPromise();
     }
   }
 
@@ -113,11 +113,13 @@ export class OrderService {
       timestamp: new Date().getTime(),
     });
 
-    const res = await this.httpService.post(order.onPlace, {
-      jobId: jobId.toString(),
-      ...order.toJSON(),
-    }).toPromise();
-     console.log(res);
+    await this.httpService
+      .post(order.onPlace, {
+        jobId: jobId.toString(),
+        ...order.toJSON(),
+      })
+      .toPromise();
+
     await this.orderPlaced(order);
   }
 
@@ -149,7 +151,9 @@ export class OrderService {
     const readyForDelete = await this.orderModel.find({ amount: { $lte: 0 } });
     await Promise.all(
       readyForDelete.map(async (d) => {
-        this.httpService.post(d.onComplete, new OrderCompletedDto(d));
+        await this.httpService
+          .post(d.onComplete, new OrderCompletedDto(d))
+          .toPromise();
         await d.delete();
       }),
     );
@@ -318,14 +322,12 @@ export class OrderService {
     await this.updateOrderAmount(iOrder, amount, price);
     await this.updateOrderAmount(mOrder, amount, price);
 
-    this.httpService.post(
-      iOrder.onMatch,
-      new OrderMatchedDto(iOrder, remaining),
-    );
-    this.httpService.post(
-      mOrder.onMatch,
-      new OrderMatchedDto(mOrder, remaining),
-    );
+    await this.httpService
+      .post(iOrder.onMatch, new OrderMatchedDto(iOrder, remaining))
+      .toPromise();
+    await this.httpService
+      .post(mOrder.onMatch, new OrderMatchedDto(mOrder, remaining))
+      .toPromise();
 
     remaining -= amount;
 
