@@ -15,25 +15,25 @@ export class PlaceOrderDto {
 
   @ApiProperty({
     description: 'POST Request URL to notify broker when order is placed.',
-    example: "ASA there's one",
+    example: 'http://request.url.net:8082/webhook/onPlace',
   })
   onPlace: string;
 
   @ApiProperty({
     description: 'POST Request URL to notify broker when order is matched.',
-    example: "ASA there's one",
+    example: 'http://request.url.net:8082/webhook/onMatch',
   })
   onMatch: string;
 
   @ApiProperty({
     description: 'POST Request URL to notify broker when order is completed.',
-    example: "ASA there's one",
+    example: 'http://request.url.net:8082/webhook/onComplete',
   })
   onComplete: string;
 
   @ApiProperty({
     description: 'POST Request URL to notify broker when order is deleted.',
-    example: "ASA there's one",
+    example: 'http://request.url.net:8082/webhook/onDelete',
   })
   onDelete: string;
 
