@@ -11,13 +11,6 @@ export class AppController {
   }
 
   @ApiExcludeEndpoint(true)
-  @Get('pricing')
-  @Render('pricing.hbs')
-  renderPricing() {
-    // no op
-  }
-
-  @ApiExcludeEndpoint(true)
   @Get('trading')
   @Render('trading.hbs')
   renderTrading() {

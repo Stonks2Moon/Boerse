@@ -1,4 +1,3 @@
-import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -7,8 +6,7 @@ import { BrokerModule } from './broker/broker.module';
 import { ClearingModule } from './clearing/clearing.module';
 import { MarketModule } from './market/market.module';
 import { MSSocket } from './MSSocket';
-import { OrderModule } from './order/order.module';
-import { QueueModule } from './queue/queue.module';
+import { PricingModule } from './pricing/pricing.module';
 import { ShareModule } from './share/share.module';
 
 @Module({
@@ -22,23 +20,24 @@ import { ShareModule } from './share/share.module';
         };
       },
     }),
-    BullModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        redis: {
-          host: configService.get('REDIS_HOST'),
-          port: configService.get('REDIS_PORT'),
-          username: configService.get('REDIS_USER'),
-          password: configService.get('REDIS_PW'),
-        },
-      }),
-    }),
-    OrderModule,
+    // BullModule.forRootAsync({
+    //   inject: [ConfigService],
+    //   useFactory: (configService: ConfigService) => ({
+    //     redis: {
+    //       host: configService.get('REDIS_HOST'),
+    //       port: configService.get('REDIS_PORT'),
+    //       username: configService.get('REDIS_USER'),
+    //       password: configService.get('REDIS_PW'),
+    //     },
+    //   }),
+    // }),
+    // OrderModule,
+    // QueueModule,
     BrokerModule,
     ShareModule,
     ClearingModule,
     MarketModule,
-    QueueModule,
+    PricingModule,
   ],
   controllers: [AppController],
   providers: [MSSocket],
