@@ -1,7 +1,7 @@
 import { UnprocessableEntityException } from '@nestjs/common';
 import { PlaceOrderDto } from './dtos/PlaceOrder.dto';
 
-const MAX_AMOUNT = 10000;
+const MAX_AMOUNT = 100000;
 const MAX_DIGITS = 2;
 
 export class OrderValidator {
@@ -25,7 +25,7 @@ export class OrderValidator {
 
     if (amount < 0 || amount > MAX_AMOUNT) {
       throw new UnprocessableEntityException(
-        'Amount needs to be between 1 and 10000.',
+        'Amount needs to be between 1 and 100000.',
       );
     }
 
