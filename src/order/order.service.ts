@@ -239,7 +239,7 @@ export class OrderService {
 
     if (totalMatchOrders === 0) return;
 
-    const limitFunc = type === 'buy' ? Math.max : Math.min;
+    const limitFunc = type === 'buy' ? Math.min : Math.max;
     const refPrice = await this.shareService.getCurrentPrice(shareId);
 
     let remaining = order.amount;
