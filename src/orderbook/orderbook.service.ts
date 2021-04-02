@@ -24,8 +24,8 @@ export class OrderbookService {
       limit = 10;
     }
 
-    const buySort = { market: -1, limit: 1, timestamp: 1 };
-    const sellSort = { market: -1, limit: -1, timestamp: 1 };
+    const buySort = { market: -1, limit: -1, timestamp: 1 };
+    const sellSort = { market: 1, limit: 1, timestamp: 1 };
 
     const orders = () => this.orderModel.find({ shareId: shareId });
     const stops = () => this.orderModel.find({ stop: { $exists: true } });
@@ -38,9 +38,8 @@ export class OrderbookService {
         .find({ type: 'sell', stop: { $exists: false } })
         .sort(sellSort);
 
-    const map = (o: Query<Order[], Order>) =>
-      o.select('amount limit stop timestamp').limit(+limit);
-
+    const map = (o: Query<Order[], Order>) => o.select('limit').limit(+limit);
+    // amount limit stop timestamp
     return {
       price: share.price,
       shareId: shareId,
@@ -49,7 +48,7 @@ export class OrderbookService {
       totalBuyOrders: await buys().countDocuments(),
       totalSellOrders: await sells().countDocuments(),
       buyOrders: await map(buys()),
-      sellOrders: await map(sells()),
+      sellOrders: (await map(sells())).reverse(),
     };
   }
 

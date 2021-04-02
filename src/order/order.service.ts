@@ -104,7 +104,7 @@ export class OrderService {
     if (order) {
       const orderDeleted = new OrderDeletedDto(order);
       await order.delete();
-      this.msSocket.server.to('stockmarket').emit('update-orderbook');
+      this.msSocket.server.emit('update-orderbook', dto.orderId);
       this.sendCallback(order.onDelete, orderDeleted);
     }
   }
@@ -152,7 +152,7 @@ export class OrderService {
       const condS = order.type === 'sell' && refPriceStart > order.stop;
 
       if (condB || condS) {
-        this.msSocket.server.to('stockmarket').emit('update-orderbook');
+        this.msSocket.server.emit('update-orderbook', order.shareId);
         return;
       }
     }
@@ -189,7 +189,7 @@ export class OrderService {
         $and: [...filter, { stop: { $lte: refPriceEnd } }],
       });
     }
-    this.msSocket.server.to('stockmarket').emit('update-orderbook');
+    this.msSocket.server.emit('update-orderbook', order.shareId);
   }
 
   /**
