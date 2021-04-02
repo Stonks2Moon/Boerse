@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
 import { Document } from 'mongoose';
 
 @Schema({
@@ -99,6 +99,10 @@ export class Order extends Document {
   })
   @Prop({ required: false })
   stop?: number;
+
+  @ApiHideProperty()
+  @Prop({ required: false })
+  market?: boolean;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

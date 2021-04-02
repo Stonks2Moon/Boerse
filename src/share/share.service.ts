@@ -77,7 +77,7 @@ export class ShareService {
       const model = await this.priceModel.create({
         shareId: shareId,
         price: price,
-        timestamp: new Date().getTime(),
+        timestamp: Date.now(),
       });
 
       this.msSocket.server.emit('price', {

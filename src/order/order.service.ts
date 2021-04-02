@@ -130,8 +130,9 @@ export class OrderService {
   ): Promise<void> {
     const order = await this.orderModel.create({
       ...dto,
+      market: dto.limit ? undefined : true,
       brokerId: broker.id,
-      timestamp: new Date().getTime(),
+      timestamp: Date.now(),
     });
 
     this.sendCallback(order.onPlace, {
@@ -152,19 +153,17 @@ export class OrderService {
       order.shareId,
     );
 
-    if (order.type === 'buy') {
-      if (order.stop && refPriceStart < order.stop) {
+    if (order.stop) {
+      const condB = order.type === 'buy' && refPriceStart < order.stop;
+      const condS = order.type === 'sell' && refPriceStart > order.stop;
+
+      if (condB || condS) {
         this.msSocket.server.to('stockmarket').emit('update-orderbook');
         return;
       }
-      await this.buyOrderPlaced(order);
-    } else {
-      if (order.stop && refPriceStart > order.stop) {
-        this.msSocket.server.to('stockmarket').emit('update-orderbook');
-        return;
-      }
-      await this.sellOrderPlaced(order);
     }
+
+    this.matchOrder(order);
 
     // check if order can be deleted
     const readyForDelete = await this.orderModel.find({ amount: { $lte: 0 } });
@@ -228,83 +227,55 @@ export class OrderService {
     await this.orderPlaced(order);
   }
 
-  /**
-   * place or match a buy order
-   * check for sell orders to match with:
-   * - if no sell orders, place buy order in orderbook
-   * - check if there are sell orders to match with, iterate through sell orders
-   *   if market order look for cheapest sell order
-   *   if limit order get prices and check if there is a fitting sell order
-   *      if sell orders are higher than buy order limit - place buy order
-   *   else call this.match
-   * @param buyOrder: information about this buyOrder
-   */
-  private async buyOrderPlaced(buyOrder: Order): Promise<void> {
-    const { shareId } = buyOrder;
-    const sellOrders = (await this.getSellOrders(shareId)).reverse();
+  private async matchOrder(order: Order): Promise<void> {
+    const { shareId, type } = order;
 
-    if (sellOrders.length === 0) return;
+    const limitSort = type === 'buy' ? -1 : 1;
+    const matchingType = type === 'buy' ? 'sell' : 'buy';
 
-    let remaining = buyOrder.amount;
+    const possibleMatches = () =>
+      this.orderModel
+        .find({
+          shareId: shareId,
+          type: matchingType,
+          stop: { $exists: false },
+        })
+        .sort({ market: -1, limit: limitSort, timestamp: 1 });
+
+    const totalMatchOrders = await possibleMatches().countDocuments();
+
+    if (totalMatchOrders === 0) return;
+
+    const limitFunc = type === 'buy' ? Math.max : Math.min;
     const refPrice = await this.shareService.getCurrentPrice(shareId);
 
-    for (let i = 0; i < sellOrders.length && remaining > 0; i++) {
-      const sO = sellOrders[i];
+    let remaining = order.amount;
 
-      let newPrice = 0;
-      const remainingLimits = this.getRemainingLimits(sellOrders, i);
+    for (let i = 0; i < totalMatchOrders && remaining > 0; i++) {
+      const mOrder = await possibleMatches().skip(i).limit(1).findOne();
 
-      if (!buyOrder.limit) {
-        newPrice = sO.limit || Math.min(refPrice, ...remainingLimits);
-      } else {
-        newPrice =
-          sO.limit || Math.min(refPrice, buyOrder.limit, ...remainingLimits);
+      const rLs = await possibleMatches()
+        .skip(i)
+        .find({ limit: { $exists: true } })
+        .limit(1);
 
-        if (newPrice > buyOrder.limit) {
-          return;
-        }
+      const rLimit = rLs.length > 0 ? rLs[0].limit || refPrice : refPrice;
+
+      const newPrice =
+        mOrder.limit || limitFunc(refPrice, order.limit || refPrice, rLimit);
+
+      if (order.limit) {
+        if (type === 'buy' && newPrice > order.limit) return;
+        if (type === 'sell' && newPrice < order.limit) return;
       }
-      remaining = await this.match(newPrice, remaining, shareId, buyOrder, sO);
-    }
-  }
 
-  /**
-   * place or match a sell order
-   * check for buy orders to match with:
-   * - if no buy orders, place buy order in orderbook
-   * - check if there are buy orders to match with, iterate through buy orders
-   *   if market order look for max. buy order
-   *   if limit order get prices and check if there is a fitting buy order
-   *      if buy orders are lower than sell order limit - place sell order
-   *   else call this.match
-   * @param sellOrder: informaiton about this sellOrder
-   */
-  private async sellOrderPlaced(sellOrder: Order): Promise<void> {
-    const { shareId } = sellOrder;
-    const buyOrders = await this.getBuyOrders(shareId);
-
-    if (buyOrders.length === 0) return;
-
-    let remaining = sellOrder.amount;
-    const refPrice = await this.shareService.getCurrentPrice(shareId);
-
-    for (let i = 0; i < buyOrders.length && remaining > 0; i++) {
-      const bO = buyOrders[i];
-
-      let newPrice = 0;
-      const remainingLimits = this.getRemainingLimits(buyOrders, i);
-
-      if (!sellOrder.limit) {
-        newPrice = bO.limit || Math.max(refPrice, ...remainingLimits);
-      } else {
-        newPrice =
-          bO.limit || Math.max(refPrice, sellOrder.limit, ...remainingLimits);
-
-        if (newPrice < sellOrder.limit) {
-          return;
-        }
-      }
-      remaining = await this.match(newPrice, remaining, shareId, sellOrder, bO);
+      remaining = await this.matched(
+        newPrice,
+        remaining,
+        shareId,
+        order,
+        mOrder,
+      );
     }
   }
 
@@ -318,7 +289,7 @@ export class OrderService {
    * @param mOrder: information about matching order
    * @returns reamining number
    */
-  private async match(
+  private async matched(
     price: number,
     remaining: number,
     shareId: string,
@@ -354,17 +325,6 @@ export class OrderService {
   }
 
   /**
-   * get limits of all orders in orderbook
-   * @param orders: all orders in orderbook -> array, so index given
-   * @param index: where to find order
-   */
-  private getRemainingLimits(orders: Order[], index: number): number[] {
-    return [...orders]
-      .filter((x, k) => k >= index && x.limit)
-      .map((x) => x.limit);
-  }
-
-  /**
    * update amount of specific orders after matching
    * @param order: matched order
    * @param amount: how many orders are left
@@ -390,55 +350,19 @@ export class OrderService {
    * @param price: sold for what pricee
    * write all inforation about matched  orders to clearing
    */
-  private async addToClearing(
-    order: Order,
-    amount: number,
-    price: number,
-  ): Promise<void> {
-    await this.clearingModel.create({
-      brokerId: order.brokerId,
-      shareId: order.shareId,
-      timestamp: new Date().getTime(),
-      amount: amount,
-      price: price,
-      type: order.type,
-      limit: order.limit,
-      stop: order.stop,
-    });
-  }
-
-  /**
-   * get sorted (limit and timestamp) list of all buy orders
-   * @param shareId: id of share
-   */
-  private async getBuyOrders(shareId: string): Promise<Order[]> {
-    return (
-      await this.orderModel
-        .find({
-          shareId: shareId,
-          type: 'buy',
-          stop: { $exists: false },
-        })
-        .sort({ limit: -1, timestamp: -1 })
-    ).sort((a, b) => {
-      if (!a.limit && b.limit) return -1;
-      if (a.limit == b.limit) return a.timestamp - b.timestamp;
-      return b.limit - a.limit;
-    });
-  }
-
-  /**
-   * get sorted (limit and timestamp) list of all sell orders
-   * @param shareId: id of share
-   */
-  private async getSellOrders(shareId: string): Promise<Order[]> {
-    return this.orderModel
-      .find({
-        shareId: shareId,
-        type: 'sell',
-        stop: { $exists: false },
+  private addToClearing(order: Order, amount: number, price: number): void {
+    this.clearingModel
+      .create({
+        brokerId: order.brokerId,
+        shareId: order.shareId,
+        timestamp: Date.now(),
+        amount: amount,
+        price: price,
+        type: order.type,
+        limit: order.limit,
+        stop: order.stop,
       })
-      .sort({ limit: -1, timestamp: -1 });
+      .then(NOOP);
   }
 
   /**

@@ -8,6 +8,7 @@ import { ClearingModule } from './clearing/clearing.module';
 import { MarketModule } from './market/market.module';
 import { MSSocket } from './MSSocket';
 import { OrderModule } from './order/order.module';
+import { Order, OrderSchema } from './order/schemas/Order.schema';
 import { PricingModule } from './pricing/pricing.module';
 import { QueueModule } from './queue/queue.module';
 import { ShareModule } from './share/share.module';
@@ -23,6 +24,7 @@ import { ShareModule } from './share/share.module';
         };
       },
     }),
+    MongooseModule.forFeature([{ name: Order.name, schema: OrderSchema }]),
     BullModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({

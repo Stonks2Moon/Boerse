@@ -23,5 +23,7 @@ export class QueueProcessor {
     else if (placeOrder && broker) {
       await this.orderService.placeOrder(job.id, broker, placeOrder);
     }
+
+    await job.remove();
   }
 }

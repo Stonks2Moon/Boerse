@@ -21,7 +21,7 @@ export class OrderDeletedDto {
 
   constructor(order: Order) {
     this.orderId = order._id;
-    this.timestamp = new Date().getTime();
+    this.timestamp = Date.now();
     this.remaining = order.amount;
   }
 }

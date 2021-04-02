@@ -27,7 +27,7 @@ export class OrderMatchedDto {
 
   constructor(order: Order, amount: number, price: number) {
     this.orderId = order._id;
-    this.timestamp = new Date().getTime();
+    this.timestamp = Date.now();
     this.amount = amount;
     this.price = price;
   }
