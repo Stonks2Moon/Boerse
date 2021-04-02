@@ -56,6 +56,7 @@ export class OrderService {
     }
   }
 
+  // TODO: REMOVE IN LATER BUILD ~Timo
   //get all 'open' orders
   public async getOrders(): Promise<Order[]> {
     return this.orderModel.find();
@@ -220,9 +221,15 @@ export class OrderService {
     await this.orderPlaced(order);
   }
 
+  /**
+   * Executes the matching algorithm. Finds matching orders and matches them.
+   * @param order newly placed order
+   * @returns void
+   */
   private async matchOrder(order: Order): Promise<void> {
     const { shareId, type } = order;
 
+    // determine sort direction and type based on placed order
     const limitSort = type === 'buy' ? -1 : 1;
     const matchingType = type === 'buy' ? 'sell' : 'buy';
 
@@ -239,30 +246,40 @@ export class OrderService {
 
     if (totalMatchOrders === 0) return;
 
+    // used later to determine the new reference price
     const limitFunc = type === 'buy' ? Math.min : Math.max;
     const refPrice = await this.shareService.getCurrentPrice(shareId);
 
     let remaining = order.amount;
 
     for (let i = 0; i <= totalMatchOrders && remaining > 0; i++) {
+      // get 'i-th' order from possible matches
       const mOrder = await possibleMatches().skip(i).limit(1).findOne();
       if (mOrder === null) continue;
 
+      // rLs = remaining limits
+      // get 'i-th' order with limit from possible matches
       const rLs = await possibleMatches()
         .skip(i)
         .find({ limit: { $exists: true } })
         .limit(1);
 
+      // rLimit = remaining limit
+      // determine remaining limit for updated refPrice, if no order exsits
+      // or order has no limit, rLimit will default back to the current refPrice
       const rLimit = rLs.length > 0 ? rLs[0].limit || refPrice : refPrice;
 
+      // determine price for which the order will be executed
       const newPrice =
         mOrder.limit || limitFunc(refPrice, order.limit || refPrice, rLimit);
 
+      // check if order has a limit and if the new price exceeds the limit of the order
       if (order.limit) {
         if (type === 'buy' && newPrice > order.limit) return;
         if (type === 'sell' && newPrice < order.limit) return;
       }
 
+      // execute match
       remaining = await this.matched(
         newPrice,
         remaining,

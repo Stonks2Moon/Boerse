@@ -12,6 +12,7 @@ import { Order, OrderSchema } from './order/schemas/Order.schema';
 import { PricingModule } from './pricing/pricing.module';
 import { QueueModule } from './queue/queue.module';
 import { ShareModule } from './share/share.module';
+import { OrderbookModule } from './orderbook/orderbook.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { ShareModule } from './share/share.module';
     ClearingModule,
     MarketModule,
     PricingModule,
+    OrderbookModule,
   ],
   controllers: [AppController],
   providers: [MSSocket],

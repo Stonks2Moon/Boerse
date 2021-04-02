@@ -44,6 +44,7 @@ export class OrderController {
     return this.orderService.deleteRequest(dto, broker);
   }
 
+  // TODO: REMOVE IN LATER BUILD ~Timo
   @ApiBearerAuth()
   @BrokerTypes(['stockmarket'])
   @UseGuards(AuthGuard('jwt'), BrokerTypeGuard)
