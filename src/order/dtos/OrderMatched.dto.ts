@@ -14,10 +14,16 @@ export class OrderMatchedDto {
   timestamp: number;
 
   @ApiProperty({
-    description: 'The amount of remaining shares after matching',
-    example: 200,
+    description: 'The amount of shares matched',
+    example: 69,
   })
   amount: number;
+
+  @ApiProperty({
+    description: 'The amount of remaining shares after matching',
+    example: 174,
+  })
+  remaining: number;
 
   @ApiProperty({
     description: 'The price for which the order has been executed',
@@ -30,5 +36,6 @@ export class OrderMatchedDto {
     this.timestamp = Date.now();
     this.amount = amount;
     this.price = price;
+    this.remaining = order.amount - amount;
   }
 }

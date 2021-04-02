@@ -156,7 +156,7 @@ export class OrderService {
       }
     }
 
-    this.matchOrder(order);
+    await this.matchOrder(order);
 
     // check if order can be deleted
     const readyForDelete = await this.orderModel.find({ amount: { $lte: 0 } });
@@ -305,11 +305,11 @@ export class OrderService {
 
     this.sendCallback(
       iOrder.onMatch,
-      new OrderMatchedDto(iOrder, remaining, price),
+      new OrderMatchedDto(iOrder, amount, price),
     );
     this.sendCallback(
       mOrder.onMatch,
-      new OrderMatchedDto(mOrder, remaining, price),
+      new OrderMatchedDto(mOrder, amount, price),
     );
 
     remaining -= amount;
