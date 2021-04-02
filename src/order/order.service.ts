@@ -44,15 +44,8 @@ export class OrderService {
     private readonly msSocket: MSSocket,
   ) {}
 
-  private isURL(url: string): boolean {
-    const res = url.match(
-      /(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g,
-    );
-    return res !== null;
-  }
-
   private sendCallback(url: string, data: any): void {
-    //if (this.isURL(url)) {
+    if (url.startsWith('http') && url.length > 15) {
       this.httpService
         .post(url, data)
         .toPromise()
@@ -60,7 +53,7 @@ export class OrderService {
         .catch(() =>
           console.error("[Order Service]\t Couldn't post to url: " + url),
         );
-    //}
+    }
   }
 
   //get all 'open' orders
