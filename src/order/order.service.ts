@@ -244,8 +244,9 @@ export class OrderService {
 
     let remaining = order.amount;
 
-    for (let i = 0; i < totalMatchOrders && remaining > 0; i++) {
+    for (let i = 0; i <= totalMatchOrders && remaining > 0; i++) {
       const mOrder = await possibleMatches().skip(i).limit(1).findOne();
+      if (mOrder === null) continue;
 
       const rLs = await possibleMatches()
         .skip(i)
