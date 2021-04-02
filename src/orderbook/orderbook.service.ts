@@ -38,8 +38,9 @@ export class OrderbookService {
         .find({ type: 'sell', stop: { $exists: false } })
         .sort(sellSort);
 
-    const map = (o: Query<Order[], Order>) => o.select('limit').limit(+limit);
-    // amount limit stop timestamp
+    const map = (o: Query<Order[], Order>) =>
+      o.select('amount limit stop timestamp').limit(+limit);
+
     return {
       price: share.price,
       shareId: shareId,
