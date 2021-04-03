@@ -230,7 +230,7 @@ export class OrderService {
     const { shareId, type } = order;
 
     // determine sort direction and type based on placed order
-    const limitSort = type === 'buy' ? -1 : 1;
+    const limitSort = type === 'buy' ? 1 : -1;
     const matchingType = type === 'buy' ? 'sell' : 'buy';
 
     const possibleMatches = () =>
