@@ -13,16 +13,30 @@ export class BrokerService {
     @InjectModel(Broker.name) private brokerModel: Model<Broker>,
   ) {}
 
+  /**
+   * Returns all broker
+   * @returns all broker
+   */
   public async getBroker(): Promise<Broker[]> {
     return await this.brokerModel.find();
   }
 
-  public async removeBroker(id: string): Promise<boolean> {
-    if (!id || !isValidObjectId(id)) return false;
-    await this.brokerModel.findOneAndDelete({ _id: id });
+  /**
+   * Deletes existing broker
+   * @param brokerId id of broker to remove
+   * @returns true
+   */
+  public async removeBroker(brokerId: string): Promise<boolean> {
+    if (!brokerId || !isValidObjectId(brokerId)) return false;
+    await this.brokerModel.findOneAndDelete({ _id: brokerId });
     return true;
   }
 
+  /**
+   * Creates new Broker including JWT
+   * @param dto CreateBrokerDto
+   * @returns created broker
+   */
   public async createBroker(dto: CreateBrokerDto): Promise<Broker> {
     dto = BrokerValidator.validate(dto);
 
@@ -42,39 +56,60 @@ export class BrokerService {
     return broker;
   }
 
-  public async patchBroker(id: string, dto: CreateBrokerDto): Promise<Broker> {
-    if (!id || !isValidObjectId(id)) {
+  /**
+   * Patches broker with given id
+   * @param brokerId id of broker
+   * @param dto CreateBrokerDto
+   * @returns broker
+   */
+  public async patchBroker(
+    brokerId: string,
+    dto: CreateBrokerDto,
+  ): Promise<Broker> {
+    if (!brokerId || !isValidObjectId(brokerId)) {
       throw new UnprocessableEntityException('Invalid brokerId');
     }
     dto = BrokerValidator.validate(dto, ['stockmarket']);
 
-    if (!(await this.brokerModel.findOne({ _id: id }))) {
+    if (!(await this.brokerModel.findOne({ _id: brokerId }))) {
       throw new UnprocessableEntityException("Broker doesn't exist");
     }
 
-    const jwt = this.jwtService.sign({ id: id, ...dto });
+    const jwt = this.jwtService.sign({ id: brokerId, ...dto });
     await this.brokerModel.updateOne(
-      { _id: id },
+      { _id: brokerId },
       { $set: { ...dto, token: jwt } },
     );
 
-    return this.brokerModel.findOne({ _id: id });
+    return this.brokerModel.findOne({ _id: brokerId });
   }
 
-  public async toggleBanned(id: string, banned: boolean): Promise<Broker> {
-    if (!id || !isValidObjectId(id)) {
+  /**
+   * Bans or unbans broker with given id
+   * @param brokerId id of broker to toggle ban
+   * @param banned is broker banned?
+   * @returns broker
+   */
+  public async toggleBanned(
+    brokerId: string,
+    banned: boolean,
+  ): Promise<Broker> {
+    if (!brokerId || !isValidObjectId(brokerId)) {
       throw new UnprocessableEntityException('Invalid brokerId');
     }
 
     if (banned) {
-      await this.brokerModel.updateOne({ _id: id }, { $set: { banned: true } });
+      await this.brokerModel.updateOne(
+        { _id: brokerId },
+        { $set: { banned: true } },
+      );
     } else {
       await this.brokerModel.updateOne(
-        { _id: id },
+        { _id: brokerId },
         { $unset: { banned: true } },
       );
     }
 
-    return this.brokerModel.findOne({ _id: id });
+    return this.brokerModel.findOne({ _id: brokerId });
   }
 }

@@ -37,28 +37,28 @@ export class BrokerController {
 
   @BrokerTypes(['stockmarket'])
   @UseGuards(AuthGuard('jwt'), BrokerTypeGuard)
-  @Delete(':id')
-  async removeBroker(@Param('id') id: string): Promise<boolean> {
-    return this.brokerService.removeBroker(id);
+  @Delete(':brokerId')
+  async removeBroker(@Param('brokerId') brokerId: string): Promise<boolean> {
+    return this.brokerService.removeBroker(brokerId);
   }
   @BrokerTypes(['stockmarket'])
   @UseGuards(AuthGuard('jwt'), BrokerTypeGuard)
-  @Patch(':id/banned/:banned')
+  @Patch(':brokerId/banned/:banned')
   async toggleBanned(
-    @Param('id') id: string,
+    @Param('brokerId') brokerId: string,
     @Param('banned') b: number,
   ): Promise<Broker> {
-    return this.brokerService.toggleBanned(id, b && +b === 1);
+    return this.brokerService.toggleBanned(brokerId, b && +b === 1);
   }
 
   @BrokerTypes(['stockmarket'])
   @UseGuards(AuthGuard('jwt'), BrokerTypeGuard)
-  @Patch(':id')
+  @Patch(':brokerId')
   async updateBroker(
-    @Param('id') id: string,
+    @Param('brokerId') brokerId: string,
     @Body() dto: CreateBrokerDto,
   ): Promise<Broker> {
-    return this.brokerService.patchBroker(id, dto);
+    return this.brokerService.patchBroker(brokerId, dto);
   }
 
   @BrokerTypes(['stockmarket'])

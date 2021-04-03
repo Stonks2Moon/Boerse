@@ -13,6 +13,12 @@ export class OrderbookService {
     private readonly shareService: ShareService,
   ) {}
 
+  /**
+   * Returns orderbook of given share
+   * @param shareId ID of share
+   * @param limit query limit, default 10
+   * @returns orderbook
+   */
   async getOrderbook(
     shareId: string,
     limit: number | string = 10,

@@ -46,9 +46,11 @@ export class ShareController {
 
   @ApiParam(PARAM_SHARE_ID)
   @ApiResponse(RESPONSE_CURRENT_PRICE)
-  @Get('price/:id')
-  async getCurrentPrice(@Param('id') id: string): Promise<number | null> {
-    return this.shareService.getCurrentPrice(id);
+  @Get('price/:shareId')
+  async getCurrentPrice(
+    @Param('shareId') shareId: string,
+  ): Promise<number | null> {
+    return this.shareService.getCurrentPrice(shareId);
   }
 
   @ApiParam(PARAM_SHARE_ID)
@@ -56,14 +58,14 @@ export class ShareController {
   @ApiQuery(QUERY_UNTIL_TS)
   @ApiQuery(QUERY_LIMIT)
   @ApiResponse(RESPONSE_PRICES)
-  @Get('prices/:id')
+  @Get('prices/:shareId')
   async getPrices(
-    @Param('id') id: string,
+    @Param('shareId') shareId: string,
     @Query('from') from?: number,
     @Query('until') until?: number,
     @Query('limit') limit?: number,
   ): Promise<Price[] | null> {
-    return this.shareService.getPrices(id, +from, +until, +limit);
+    return this.shareService.getPrices(shareId, +from, +until, +limit);
   }
 
   @ApiBearerAuth()
@@ -79,11 +81,11 @@ export class ShareController {
   @ApiResponse(RESPONSE_PATCH_SHARE)
   @BrokerTypes(['stockmarket'])
   @UseGuards(AuthGuard('jwt'), BrokerTypeGuard)
-  @Patch(':id')
+  @Patch(':shareId')
   async patchShare(
-    @Param('id') id: string,
+    @Param('shareId') shareId: string,
     @Body() dto: CreateShareDto,
   ): Promise<Share> {
-    return this.shareService.patchShare(id, dto);
+    return this.shareService.patchShare(shareId, dto);
   }
 }

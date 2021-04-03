@@ -28,7 +28,7 @@ export const RESPONSE_PATCH_SHARE: ApiResponseOptions = {
 };
 
 export const PARAM_SHARE_ID: ApiParamOptions = {
-  name: 'id',
+  name: 'shareId',
   example: '6037e67c8407c737441517d6',
 };
 
