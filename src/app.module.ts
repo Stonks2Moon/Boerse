@@ -9,10 +9,10 @@ import { MarketModule } from './market/market.module';
 import { MSSocket } from './MSSocket';
 import { OrderModule } from './order/order.module';
 import { Order, OrderSchema } from './order/schemas/Order.schema';
+import { OrderbookModule } from './orderbook/orderbook.module';
 import { PricingModule } from './pricing/pricing.module';
 import { QueueModule } from './queue/queue.module';
 import { ShareModule } from './share/share.module';
-import { OrderbookModule } from './orderbook/orderbook.module';
 
 @Module({
   imports: [
@@ -32,7 +32,6 @@ import { OrderbookModule } from './orderbook/orderbook.module';
         redis: {
           host: configService.get('REDIS_HOST'),
           port: configService.get('REDIS_PORT'),
-          username: configService.get('REDIS_USER'),
           password: configService.get('REDIS_PW'),
         },
       }),
