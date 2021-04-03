@@ -25,7 +25,7 @@ export class OrderbookService {
     }
 
     const buySort = { market: -1, limit: -1, timestamp: 1 };
-    const sellSort = { market: 1, limit: 1, timestamp: 1 };
+    const sellSort = { market: -1, limit: 1, timestamp: 1 };
 
     const orders = () => this.orderModel.find({ shareId: shareId });
     const stops = () => this.orderModel.find({ stop: { $exists: true } });
