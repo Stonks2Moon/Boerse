@@ -26,7 +26,12 @@ export class Broker extends Document {
     example: 'business',
   })
   @Prop()
-  type: 'private' | 'business' | 'simulation' | 'stockmarket';
+  type:
+    | 'private'
+    | 'business'
+    | 'simulation'
+    | 'stockmarket'
+    | 'liquiditydonor';
 
   @ApiProperty({
     description: 'Internal displayName for an specific broker',

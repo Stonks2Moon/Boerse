@@ -6,7 +6,7 @@ export class CreateBrokerDto {
     type: 'BrokerType',
     example: 'business',
   })
-  type: 'private' | 'business' | 'simulation';
+  type: 'private' | 'business' | 'simulation' | 'liquiditydonor';
 
   @ApiProperty({
     description: 'Internal displayName for an specific broker',

@@ -12,7 +12,12 @@ export class BrokerModel {
     type: 'BrokerType',
     example: 'private',
   })
-  type: 'private' | 'business' | 'simulation' | 'stockmarket';
+  type:
+    | 'private'
+    | 'business'
+    | 'simulation'
+    | 'stockmarket'
+    | 'liquiditydonor';
 
   @ApiProperty({
     description: 'Internal displayName for an specific broker',

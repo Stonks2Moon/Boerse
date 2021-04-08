@@ -15,9 +15,13 @@ export class BrokerValidator {
       throw new UnprocessableEntityException('Please provide a broker type');
     }
 
-    if (!['business', 'private', 'simulation', ...eT].includes(type)) {
+    if (
+      !['business', 'private', 'simulation', 'liquiditydonor', ...eT].includes(
+        type,
+      )
+    ) {
       throw new UnprocessableEntityException(
-        'Invalid broker type. Valid types are: business, private, simulation',
+        'Invalid broker type. Valid types are: business, private, simulation, liquiditydonor.',
       );
     }
 
