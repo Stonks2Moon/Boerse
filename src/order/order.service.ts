@@ -362,6 +362,9 @@ export class OrderService {
    * write all inforation about matched  orders to clearing
    */
   private addToClearing(order: Order, amount: number, price: number): void {
+    // Simpulations Gruppe braucht kein Clearing
+    if (order.brokerId === '60477379c18e3513f4a2e4c6') return;
+
     this.clearingModel
       .create({
         brokerId: order.brokerId,
