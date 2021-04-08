@@ -44,6 +44,11 @@ export class OrderService {
     private readonly msSocket: MSSocket,
   ) {}
 
+  /**
+   * Sends callback to broker with given url
+   * @param url Callback URL, provided by broker
+   * @param data data of order
+   */
   private sendCallback(url: string, data: any): void {
     if (url.startsWith('http') && url.length > 15) {
       this.httpService
@@ -65,11 +70,11 @@ export class OrderService {
   /**
    * get Orders
    * @param broker: information about broker
-   * @param id: id of Order
+   * @param orderId: id of Order
    */
-  public async getOrder(broker: BrokerModel, id: string): Promise<Order> {
-    if (!id || !isValidObjectId(id)) {
-      throw new NotFoundException(`Invalid orderId: '${id}'`);
+  public async getOrder(broker: BrokerModel, orderId: string): Promise<Order> {
+    if (!orderId || !isValidObjectId(orderId)) {
+      throw new NotFoundException(`Invalid orderId: '${orderId}'`);
     }
 
     /**
@@ -78,12 +83,12 @@ export class OrderService {
      * @param brokerId: id of broker who placed the order
      */
     const order = await this.orderModel.findOne({
-      _id: id,
+      _id: orderId,
       brokerId: broker.id,
     });
 
     if (!order) {
-      throw new NotFoundException(`Order with id '${id}' doesn't exist`);
+      throw new NotFoundException(`Order with id '${orderId}' doesn't exist`);
     }
 
     return order;

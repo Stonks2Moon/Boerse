@@ -15,17 +15,31 @@ export class ShareService {
     private readonly msSocket: MSSocket,
   ) {}
 
-  public async getShare(id: string): Promise<Share | null> {
-    if (!id || !isValidObjectId(id)) return null;
-    const share = await this.shareModel.findById(id);
+  /**
+   * Returns share with given Id
+   * @param shareId ID of share
+   * @returns share or null
+   */
+  public async getShare(shareId: string): Promise<Share | null> {
+    if (!shareId || !isValidObjectId(shareId)) return null;
+    const share = await this.shareModel.findById(shareId);
     return share || null;
   }
 
+  /**
+   * Returns all available shares
+   * @returns all available shares
+   */
   public async getAvailableShares(): Promise<Share[]> {
     return this.shareModel.find();
   }
 
-  public async getIsTradeable(shareId: string): Promise<boolean> {
+  /**
+   * Checks if trade of share is disabled or not
+   * @param shareId ID of share
+   * @returns false or true
+   */
+  public async isTradeable(shareId: string): Promise<boolean> {
     if (!shareId || !isValidObjectId(shareId)) return false;
     const share = await this.shareModel.findOne({ _id: shareId });
     if (!share) return false;
@@ -33,21 +47,36 @@ export class ShareService {
     return true;
   }
 
-  public async getCurrentPrice(id: string): Promise<number> {
-    const share = await this.getShare(id);
+  /**
+   * Checks current price of given share
+   * @param shareId ID of share
+   * @returns current price of share
+   */
+  public async getCurrentPrice(shareId: string): Promise<number> {
+    const share = await this.getShare(shareId);
     if (!share) return -1;
     return share.price;
   }
 
+  /**
+   * Returns all prices, limited by given parameters
+   * @param shareId ID of share
+   * @param from timestamp - start of time span
+   * @param until timestamp - end of time span
+   * @param limit limits number of results
+   * @returns prices
+   */
   public async getPrices(
-    id: string,
+    shareId: string,
     from?: number,
     until?: number,
     limit?: number,
   ): Promise<Price[]> {
-    if (!id || !isValidObjectId(id)) return [];
+    if (!shareId || !isValidObjectId(shareId)) return [];
 
-    let prices = this.priceModel.find({ shareId: id }).sort({ timestamp: -1 });
+    let prices = this.priceModel
+      .find({ shareId: shareId })
+      .sort({ timestamp: -1 });
 
     if (from && typeof from === 'number') {
       prices = prices.find({ timestamp: { $gte: from } });
@@ -62,6 +91,12 @@ export class ShareService {
     return prices;
   }
 
+  /**
+   * Updates price of a share
+   * @param shareId ID of share
+   * @param price new price of share
+   * @returns void
+   */
   public async updatePrice(shareId: string, price: number): Promise<void> {
     const share = await this.getShare(shareId);
 
@@ -87,16 +122,30 @@ export class ShareService {
     }
   }
 
-  public async patchShare(id: string, dto: CreateShareDto): Promise<Share> {
+  /**
+   * Updates Share with given data
+   * @param shareId ID of share
+   * @param dto Data you want to update
+   * @returns share
+   */
+  public async patchShare(
+    shareId: string,
+    dto: CreateShareDto,
+  ): Promise<Share> {
     dto = ShareValidator.validate(dto);
-    if (!id || id.length === 0 || !isValidObjectId(id)) {
+    if (!shareId || shareId.length === 0 || !isValidObjectId(shareId)) {
       throw new UnprocessableEntityException('Invalid shareId');
     }
 
-    await this.shareModel.updateOne({ _id: id }, { $set: dto });
-    return this.getShare(id);
+    await this.shareModel.updateOne({ _id: shareId }, { $set: dto });
+    return this.getShare(shareId);
   }
 
+  /**
+   * Creates a new share
+   * @param dto Data of share you want to create
+   * @returns share
+   */
   public async createShare(dto: CreateShareDto): Promise<Share> {
     dto = ShareValidator.validate(dto);
     return this.shareModel.create(dto);

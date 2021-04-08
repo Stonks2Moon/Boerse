@@ -54,13 +54,13 @@ export class OrderController {
   }
 
   @ApiBearerAuth()
-  @ApiParam({ name: 'id', example: '6053133b6f29c24f4851dd7e' })
+  @ApiParam({ name: 'orderId', example: '6053133b6f29c24f4851dd7e' })
   @UseGuards(AuthGuard('jwt'))
-  @Get(':id')
+  @Get(':orderId')
   async getOrderStatus(
     @MSBroker() broker: BrokerModel,
-    @Param('id') id: string,
+    @Param('orderId') orderId: string,
   ): Promise<Order> {
-    return this.orderService.getOrder(broker, id);
+    return this.orderService.getOrder(broker, orderId);
   }
 }

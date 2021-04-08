@@ -40,8 +40,10 @@ export class Order extends Document {
   timestamp: number;
 
   @ApiProperty({
-    description: 'Amount of the shares',
+    description: 'Amount of the shares. 0 < amount ≤ 100000',
     example: 1000,
+    minimum: 0.01,
+    maximum: 100000,
   })
   @Prop()
   amount: number;
@@ -85,7 +87,7 @@ export class Order extends Document {
   @ApiProperty({
     required: false,
     description:
-      'Limit of order you want to place. Required for Limit and Stop Limit Order.',
+      'Limit of order you want to place. Required for Limit and Stop Limit Order. Maximum 2 decimal places allowed.',
     example: 200,
   })
   @Prop({ required: false })
@@ -94,7 +96,7 @@ export class Order extends Document {
   @ApiProperty({
     required: false,
     description:
-      'Stop of order you want to place. Required for Stop Market and Stop Limit Order.',
+      'Stop of order you want to place. Required for Stop Market and Stop Limit Order. Maximum 2 decimal places allowed.',
     example: 200,
   })
   @Prop({ required: false })
