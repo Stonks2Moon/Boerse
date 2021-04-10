@@ -292,6 +292,10 @@ export class OrderService {
         order,
         mOrder,
       );
+
+      // update order for new remaining amount
+      // had a bug with one order completing several others
+      order = await this.orderModel.findOne({ _id: order._id });
     }
   }
 
