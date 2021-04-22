@@ -31,6 +31,10 @@ export class InvoiceService {
       .then(() => {});
   }
 
+  public async getAll(): Promise<Invoice[]> {
+    return this.invoiceModel.find();
+  }
+
   public async getInvoices(brokerId: string): Promise<Invoice[]> {
     return this.invoiceModel.find({ brokerId: brokerId, payed: false });
   }

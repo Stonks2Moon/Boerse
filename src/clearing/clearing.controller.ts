@@ -1,10 +1,12 @@
 import { Controller, Get, Param, Res, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { MSBroker } from 'src/broker/broker.decorator';
+import { BrokerTypeGuard, BrokerTypes } from 'src/broker/brokerType.guard';
 import { BrokerModel } from 'src/broker/models/Broker.model';
 import { ClearingService } from './clearing.service';
+import { DailyClearing } from './schemas/DailyClearing.schema';
 
 @ApiTags('Clearing')
 @Controller('clearing')
@@ -29,5 +31,13 @@ export class ClearingController {
     @Res() res: Response,
   ) {
     this.clearingService.getMonthlyReport(broker.id, month, year, res);
+  }
+
+  @ApiBearerAuth()
+  @Get('daily')
+  @BrokerTypes(['stockmarket'])
+  @UseGuards(AuthGuard('jwt'), BrokerTypeGuard)
+  async getDailyClearings(): Promise<DailyClearing[]> {
+    return this.clearingService.getAllDailyClearings();
   }
 }

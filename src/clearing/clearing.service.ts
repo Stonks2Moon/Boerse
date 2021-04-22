@@ -286,4 +286,8 @@ export class ClearingService {
       wb.write('Clearing Report.xlsx', res);
     }
   }
+
+  public async getAllDailyClearings(): Promise<DailyClearing[]> {
+    return this.dailyClearingModel.find();
+  }
 }

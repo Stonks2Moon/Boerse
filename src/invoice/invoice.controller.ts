@@ -2,6 +2,7 @@ import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { MSBroker } from 'src/broker/broker.decorator';
+import { BrokerTypeGuard, BrokerTypes } from 'src/broker/brokerType.guard';
 import { BrokerModel } from 'src/broker/models/Broker.model';
 import { InvoiceService } from './invoice.service';
 import { Invoice } from './schemas/Invoice.schema';
@@ -16,6 +17,14 @@ export class InvoiceController {
   @Get()
   async getInvoices(@MSBroker() broker: BrokerModel): Promise<Invoice[]> {
     return this.invoiceService.getInvoices(broker.id);
+  }
+
+  @ApiBearerAuth()
+  @BrokerTypes(['stockmarket'])
+  @UseGuards(AuthGuard('jwt'), BrokerTypeGuard)
+  @Get()
+  async getAll(): Promise<Invoice[]> {
+    return this.invoiceService.getAll();
   }
 
   @UseGuards(AuthGuard('jwt'))
