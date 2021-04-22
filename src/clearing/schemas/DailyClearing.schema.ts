@@ -1,7 +1,15 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-
-@Schema({ toJSON: { virtuals: true } })
+@Schema({
+  toJSON: {
+    virtuals: true,
+    transform: (_doc: DailyClearing, ret: DailyClearing) => {
+      delete ret._id;
+      delete ret.__v;
+      return ret;
+    },
+  },
+})
 export class DailyClearing extends Document {
   @Prop()
   brokerId: string;

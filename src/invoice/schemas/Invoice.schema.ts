@@ -7,9 +7,6 @@ import { Document } from 'mongoose';
     transform: (_doc: Invoice, ret: Invoice) => {
       delete ret._id;
       delete ret.__v;
-      delete ret.brokerId;
-      delete ret.month;
-      delete ret.year;
       return ret;
     },
   },
