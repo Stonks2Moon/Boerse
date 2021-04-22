@@ -276,8 +276,8 @@ export class ClearingService {
       ws.cell(x, 6).number(c.tradePrice);
       ws.cell(x, 7).number(c.fixum);
       ws.cell(x, 8).number(
-        c.volumeBuy -
-          (c.volumeSell + c.transactionPrice + c.tradePrice + c.fixum),
+        c.volumeSell -
+          (c.volumeBuy + c.transactionPrice + c.tradePrice + c.fixum),
       );
       x++;
     });
