@@ -22,7 +22,7 @@ export class InvoiceController {
   @ApiBearerAuth()
   @BrokerTypes(['stockmarket'])
   @UseGuards(AuthGuard('jwt'), BrokerTypeGuard)
-  @Get()
+  @Get("all")
   async getAll(): Promise<Invoice[]> {
     return this.invoiceService.getAll();
   }
